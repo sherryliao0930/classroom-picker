@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffe9f0">
+<title>🐾 動物扭蛋分組機 🐾</title>
+<style>
+  :root{
+    --pink:#ff9fb2; --pink-d:#f56f8c; --cream:#fff8ef; --mint:#9fe0d0;
+    --lemon:#ffe08a; --ink:#5b4636; --ink-l:#8d7b6b; --line:#f0e2d2;
+    --safe-b:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0; padding:20px 14px calc(96px + var(--safe-b));
+    font-family:"Chalkboard SE","Comic Sans MS","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink); min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 18%, #fff 0 9px, transparent 10px),
+      radial-gradient(circle at 78% 42%, #fff 0 7px, transparent 8px),
+      radial-gradient(circle at 35% 78%, #fff 0 11px, transparent 12px),
+      linear-gradient(180deg,#fdf1e3 0%, #ffe9f0 55%, #e9f6ff 100%);
+    background-size:260px 260px,220px 220px,300px 300px,100% 100%;
+    background-attachment:fixed;
+  }
+  h1{text-align:center;margin:0 0 4px;font-size:clamp(22px,5vw,36px);color:var(--pink-d);
+     text-shadow:2px 3px 0 #fff,4px 6px 0 rgba(245,111,140,.18);letter-spacing:1px}
+  .sub{text-align:center;color:var(--ink-l);margin:0 0 18px;font-size:13px}
+  .wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+  .card{background:var(--cream);border:3px solid #fff;border-radius:24px;
+        box-shadow:0 8px 0 rgba(214,180,150,.26),0 14px 26px rgba(160,120,100,.12);padding:16px}
+  .card h2{margin:0 0 12px;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .card h2 small{font-weight:400;font-size:11px;color:var(--ink-l)}
+
+  /* ============ 扭蛋機 ============ */
+  .stage{display:flex;flex-direction:column;align-items:center}
+  .machine{position:relative;width:206px;transform-origin:50% 100%;transition:transform .3s}
+  .machine.shake{animation:shake .48s cubic-bezier(.36,.07,.19,.97) 2}
+  @keyframes shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-8px) rotate(-3.5deg)}
+    40%{transform:translateX(7px) rotate(3deg)}60%{transform:translateX(-6px) rotate(-2.4deg)}80%{transform:translateX(5px) rotate(1.8deg)}}
+  .ear{position:absolute;top:-22px;width:42px;height:42px;background:var(--pink);border:4px solid #fff;border-radius:50% 50% 40% 40%}
+  .ear.l{left:22px;transform:rotate(-18deg)} .ear.r{right:22px;transform:rotate(18deg)}
+  .ear::after{content:"";position:absolute;inset:8px 8px 11px;background:#ffd3dd;border-radius:50%}
+  .dome{position:relative;width:206px;height:160px;border-radius:110px 110px 24px 24px;
+    background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(190,232,255,.72));
+    border:5px solid #fff;box-shadow:inset 0 -14px 22px rgba(120,180,220,.28);overflow:hidden;z-index:1}
+  .dome .shine{position:absolute;top:20px;left:26px;width:34px;height:54px;background:rgba(255,255,255,.85);border-radius:50%;transform:rotate(-22deg)}
+  .balls{position:absolute;inset:0}
+  .balls i{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.85)}
+  .machine.shake .balls i{animation:jig .16s infinite alternate}
+  @keyframes jig{to{transform:translate(var(--jx),var(--jy))}}
+  .mbody{position:relative;width:192px;margin:-6px auto 0;height:118px;
+    background:linear-gradient(180deg,var(--pink),var(--pink-d));border:5px solid #fff;border-radius:20px;z-index:2}
+  .face{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:14px;color:#fff;letter-spacing:8px;opacity:.9}
+  .cheek{position:absolute;top:18px;width:13px;height:8px;background:#ffd0da;border-radius:50%;opacity:.85}
+  .cheek.l{left:44px} .cheek.r{right:44px}
+  .knob{position:absolute;left:20px;bottom:18px;width:46px;height:46px;border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,#fff,#ffe08a 60%,#f2c14e);border:4px solid #fff;display:grid;place-items:center}
+  .knob b{width:6px;height:26px;background:#fff;border-radius:4px;transition:transform .95s cubic-bezier(.5,-.3,.3,1.4)}
+  .machine.turn .knob b{transform:rotate(1080deg)}
+  .slot{position:absolute;right:20px;bottom:16px;width:68px;height:50px;border-radius:12px;background:#7c4a52;border:4px solid #fff;box-shadow:inset 0 6px 10px rgba(0,0,0,.35)}
+  .legs{width:168px;height:14px;margin:-4px auto 0;background:#e0b48f;border:4px solid #fff;border-radius:0 0 14px 14px}
+
+  .chute{position:relative;width:100%;height:136px;margin-top:4px}
+  .capsule{position:absolute;left:50%;top:-24px;width:104px;height:104px;margin-left:-52px;opacity:0}
+  .capsule.drop{animation:drop .95s cubic-bezier(.34,1.4,.5,1) forwards}
+  @keyframes drop{0%{opacity:0;transform:translate(42px,-64px) scale(.5) rotate(0)}
+    35%{opacity:1;transform:translate(18px,14px) scale(1) rotate(160deg)}
+    60%{transform:translate(0,44px) scale(1) rotate(300deg)}
+    78%{transform:translate(0,16px) scale(1.03) rotate(350deg)}
+    100%{opacity:1;transform:translate(0,38px) scale(1) rotate(360deg)}}
+  .half{position:absolute;left:0;width:104px;height:52px;transition:transform .5s cubic-bezier(.5,-.4,.3,1.5),opacity .45s}
+  .half.top{top:0;border-radius:52px 52px 0 0;background:linear-gradient(180deg,#fff,rgba(255,255,255,.55));border:4px solid #fff;border-bottom:none}
+  .half.bot{top:52px;border-radius:0 0 52px 52px;border:4px solid #fff;border-top:none}
+  .capsule.open .half.top{transform:translate(-38px,-70px) rotate(-45deg);opacity:0}
+  .capsule.open .half.bot{transform:translate(38px,64px) rotate(40deg);opacity:0}
+
+  /* ============ 名牌：完整顯示，不截字 ============ */
+  .lastcard{
+    width:min(340px,100%); margin-top:-2px; background:#fff;
+    border:4px solid var(--lemon); border-radius:22px; padding:12px 16px;
+    display:flex; align-items:center; gap:13px; box-shadow:0 6px 0 rgba(214,180,150,.3);
+  }
+  .lastcard.idle{opacity:.55;border-color:var(--line)}
+  .lastcard.pop{animation:cardPop .6s cubic-bezier(.34,1.8,.5,1)}
+  @keyframes cardPop{0%{transform:scale(.3) rotate(-12deg)}60%{transform:scale(1.12) rotate(4deg)}100%{transform:scale(1)}}
+  .lc-emo{font-size:44px;line-height:1;flex:0 0 auto}
+  .lc-txt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+  .lc-no{font-size:12px;color:var(--ink-l)}
+  /* 完整呈現：可換行、不省略、字太長自動縮 */
+  .lc-nm{font-size:clamp(20px,4.6vw,28px);font-weight:700;line-height:1.2;
+         white-space:normal;overflow-wrap:anywhere;word-break:break-word;width:100%}
+  .lc-nm.long{font-size:clamp(17px,3.8vw,22px)}
+  .lc-team{font-size:12px;color:#fff;background:var(--pink);padding:4px 10px;border-radius:12px;
+           max-width:100%;overflow-wrap:anywhere}
+  .lc-team:empty{display:none}
+  .flycard{pointer-events:none;box-shadow:0 10px 24px rgba(160,120,100,.3)}
+  .hist{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:11px;max-width:360px}
+  .hist span{font-size:11px;background:#fff;border:2px solid var(--line);border-radius:11px;padding:2px 8px;color:var(--ink-l)}
+  .pool{font-size:12px;color:var(--ink-l);margin-top:9px;text-align:center}
+
+  /* ============ 控制 ============ */
+  .row{margin-bottom:12px}
+  .lab{font-size:12.5px;color:var(--ink-l);margin-bottom:6px;display:block}
+  .seg{display:flex;gap:5px;background:#fff;padding:4px;border-radius:15px;border:2px solid var(--line)}
+  .seg button{flex:1;border:none;background:transparent;padding:11px 4px;border-radius:11px;cursor:pointer;
+    font:inherit;font-size:13px;color:var(--ink-l);transition:.18s;min-height:44px}
+  .seg button.on{background:var(--pink);color:#fff;box-shadow:0 3px 0 var(--pink-d)}
+  /* 16px 以上，iOS 聚焦時才不會自動放大畫面 */
+  input[type=number],textarea,select{width:100%;font:inherit;font-size:16px;color:var(--ink);
+    border:2px solid var(--line);background:#fff;border-radius:14px;padding:11px 12px;outline:none;min-height:46px}
+  input:focus,textarea:focus,select:focus{border-color:var(--pink)}
+  textarea{height:150px;resize:vertical;line-height:1.6;min-height:120px}
+  textarea.small{height:110px}
+  select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-l) 50%),linear-gradient(135deg,var(--ink-l) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 21px,calc(100% - 13px) 21px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .hint{font-size:12.5px;color:var(--ink-l);background:#fff6e8;border:2px dashed var(--lemon);border-radius:14px;padding:9px 11px;line-height:1.6}
+  .hint.warn{background:#ffeef1;border-color:var(--pink);color:var(--pink-d)}
+  .btn{width:100%;border:none;font:inherit;font-size:17px;font-weight:700;color:#fff;cursor:pointer;
+    background:var(--pink-d);border-radius:19px;padding:14px;box-shadow:0 6px 0 #d4536f;transition:.12s;min-height:52px}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #d4536f}
+  .btn.ghost{background:#fff;color:var(--ink-l);box-shadow:0 4px 0 var(--line);font-size:14px;padding:12px;min-height:46px}
+  .btn.ghost:active{box-shadow:0 1px 0 var(--line)}
+  .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+
+  /* ============ 結果 ============ */
+  .groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:13px}
+  .grp{background:#fff;border:3px solid var(--line);border-radius:19px;padding:12px;transition:.25s;
+       animation:cardIn .45s cubic-bezier(.34,1.6,.5,1)}
+  @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.9)}to{opacity:1;transform:none}}
+  .grp.active{border-color:var(--pink);box-shadow:0 0 0 5px rgba(255,159,178,.22)}
+  .grp.done{border-color:var(--mint);box-shadow:0 0 0 5px rgba(159,224,208,.28)}
+  .ghead{display:flex;align-items:center;gap:6px;margin-bottom:9px}
+  .ghead .e{font-size:22px;flex:0 0 auto}
+  .tname{flex:1;min-width:0;font:inherit;font-size:15px;font-weight:700;color:var(--ink);
+    border:none;border-bottom:2px dashed var(--line);background:transparent;padding:3px 2px;outline:none;
+    border-radius:0;min-height:0}
+  .tname:focus{border-bottom-color:var(--pink);background:#fffaf3}
+  .gcount{font-size:11px;color:var(--ink-l);white-space:nowrap;flex:0 0 auto}
+  .grp ul{list-style:none;margin:0;padding:0}
+  .grp li{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:12px;margin-bottom:5px;
+          font-size:15px;background:var(--cream);overflow-wrap:anywhere}
+  .grp li.new{animation:pop .45s cubic-bezier(.34,1.8,.5,1)}
+  @keyframes pop{0%{opacity:0;transform:scale(.4) rotate(-8deg)}60%{transform:scale(1.08)}100%{opacity:1;transform:none}}
+  .grp li .n{font-size:11px;color:var(--ink-l);min-width:20px;flex:0 0 auto}
+  .grp li.slotmark{background:transparent;border:2px dashed var(--line);color:#d6c8ba;justify-content:center;font-size:13px;padding:5px}
+  .empty{color:var(--ink-l);font-size:14px;text-align:center;padding:30px 10px;line-height:1.8}
+
+  /* ============ 行動裝置 / iPad ============ */
+  #bar{position:fixed;left:0;right:0;bottom:0;z-index:500;display:none;
+       padding:9px 12px calc(9px + var(--safe-b));gap:9px;
+       background:rgba(255,248,239,.94);backdrop-filter:blur(10px);border-top:3px solid #fff;
+       box-shadow:0 -6px 20px rgba(160,120,100,.14)}
+  #bar .btn{margin:0}
+  #bar .btn.ghost{flex:0 0 96px}
+  #modeBtn{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:600;
+    border:3px solid #fff;background:#fff;color:var(--ink-l);font:inherit;font-size:13px;
+    padding:9px 13px;border-radius:16px;box-shadow:0 4px 0 rgba(214,180,150,.35);cursor:pointer;min-height:42px}
+
+  @media(max-width:900px){
+    body{padding-left:10px;padding-right:10px}
+    .wrap{grid-template-columns:1fr;gap:16px}
+    #panelStage{order:1} #panelResult{order:2} #panelSettings{order:3}
+    #bar{display:flex}
+    .groups{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+    .hist{max-width:100%}
+  }
+  @media(max-width:420px){
+    .machine{width:186px}.dome{width:186px;height:146px;border-radius:100px 100px 22px 22px}
+    .mbody{width:174px;height:108px}.legs{width:152px}
+    .cheek.l{left:38px}.cheek.r{right:38px}
+    .groups{grid-template-columns:1fr}
+  }
+
+  /* ============ 上課模式（投影 / 載具全螢幕） ============ */
+  body.focusmode{padding-bottom:calc(96px + var(--safe-b))}
+  body.focusmode h1,body.focusmode .sub{display:none}
+  body.focusmode #panelSettings,body.focusmode #panelResult,body.focusmode .hist{display:none}
+  body.focusmode .wrap{grid-template-columns:1fr;max-width:760px}
+  body.focusmode .machine{transform:scale(1.12);margin-bottom:14px}
+  body.focusmode .lastcard{width:min(620px,100%);padding:22px 26px;gap:20px;border-width:6px}
+  body.focusmode .lc-emo{font-size:clamp(60px,14vw,96px)}
+  body.focusmode .lc-no{font-size:clamp(14px,3vw,20px)}
+  body.focusmode .lc-nm{font-size:clamp(34px,9vw,64px)}
+  body.focusmode .lc-nm.long{font-size:clamp(26px,7vw,48px)}
+  body.focusmode .lc-team{font-size:clamp(14px,3.2vw,22px);padding:6px 16px}
+  body.focusmode .pool{font-size:15px;margin-top:16px}
+  body.focusmode #bar{display:flex}
+</style>
+</head>
+<body>
+
+<button id="modeBtn">📺 上課模式</button>
+
+<h1>🐾 動物扭蛋分組機 🐾</h1>
+<p class="sub">轉一下把手，看看今天誰跟誰同一隊！</p>
+
+<div class="wrap">
+
+  <!-- ===== 設定 ===== -->
+  <section class="card" id="panelSettings">
+    <h2>🎛️ 分組設定</h2>
+
+    <div class="row">
+      <label class="lab">要怎麼抽？</label>
+      <div class="seg" id="segMode">
+        <button data-v="single" class="on">🎯 單抽一人</button>
+        <button data-v="group">👥 分組</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="lab">抽過的人還能再被抽到嗎？</label>
+      <div class="seg" id="segRep">
+        <button data-v="no" class="on">🚫 不重複</button>
+        <button data-v="yes">🔁 可重複</button>
+      </div>
+    </div>
+
+    <div class="row" id="grpRow" style="display:none">
+      <label class="lab">分幾組 ／ 每組幾人</label>
+      <div class="two">
+        <input type="number" id="nGroups" min="1" max="20" value="5" inputmode="numeric" placeholder="組數">
+        <input type="number" id="nPer" min="1" max="40" inputmode="numeric" placeholder="每組人數（可留空）">
+      </div>
+    </div>
+
+    <div class="row" id="themeRow" style="display:none">
+      <label class="lab">隊名主題</label>
+      <select id="theme">
+        <option value="animal">🐾 可愛動物</option>
+        <option value="fruit">🍓 水果家族</option>
+        <option value="space">🚀 星際探險</option>
+        <option value="color">🌈 彩虹顏色</option>
+        <option value="sport">⚽ 運動大隊</option>
+        <option value="custom">✏️ 自己輸入</option>
+      </select>
+      <div id="customRow" style="display:none;margin-top:9px">
+        <label class="lab">自訂隊名（一行一組，可在最前面加 emoji）</label>
+        <textarea id="customTeams" class="small" placeholder="🍀 幸運草隊&#10;🔥 火焰隊&#10;第三小隊"></textarea>
+      </div>
+    </div>
+
+    <div class="row"><div class="hint" id="hint">先選好設定，再按下面的把手！</div></div>
+
+    <button class="btn" id="go">🥚 轉一下！</button>
+    <div class="btnrow">
+      <button class="btn ghost" id="auto">⚡ 一次抽完</button>
+      <button class="btn ghost" id="reset">🔄 重新開始</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" id="rename">🎲 換一批隊名</button>
+      <button class="btn ghost" id="sound">🔊 音效：開</button>
+    </div>
+
+    <div class="row" style="margin-top:16px">
+      <label class="lab">學生名單（一行一位）</label>
+      <textarea id="roster" placeholder="把班級名單貼進來，一行一位：&#10;&#10;1 王小明&#10;2 陳小華&#10;3 林小美&#10;&#10;（號碼可省略，直接打名字也可以）"></textarea>
+    </div>
+
+    <div class="row">
+      <label class="lab">下載分組結果</label>
+      <div class="btnrow" style="margin-top:0">
+        <button class="btn ghost" id="dlPng">🖼️ 下載圖片</button>
+        <button class="btn ghost" id="dlTxt">📄 下載文字檔</button>
+      </div>
+      <div class="btnrow" style="grid-template-columns:1fr">
+        <button class="btn ghost" id="copy">📋 複製到剪貼簿</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 扭蛋機 ===== -->
+  <section class="card stage" id="panelStage">
+    <div class="machine" id="machine">
+      <i class="ear l"></i><i class="ear r"></i>
+      <div class="dome"><div class="balls" id="balls"></div><div class="shine"></div></div>
+      <div class="mbody">
+        <div class="face">◕&nbsp;&nbsp;◕</div>
+        <i class="cheek l"></i><i class="cheek r"></i>
+        <div class="knob"><b></b></div>
+        <div class="slot"></div>
+      </div>
+      <div class="legs"></div>
+    </div>
+
+    <div class="chute"><div class="capsule" id="cap">
+      <div class="half top"></div><div class="half bot"></div>
+    </div></div>
+
+    <div class="lastcard idle" id="lastCard">
+      <div class="lc-emo">🥚</div>
+      <div class="lc-txt">
+        <span class="lc-no"></span>
+        <span class="lc-nm">還沒開始</span>
+        <span class="lc-team"></span>
+      </div>
+    </div>
+
+    <div class="hist" id="hist"></div>
+    <div class="pool" id="pool"></div>
+  </section>
+
+  <!-- ===== 結果 ===== -->
+  <section class="card" id="panelResult">
+    <h2>🏆 分組結果 <small>（隊名可直接點下去改）</small></h2>
+    <div id="result"><div class="empty">還沒有人被抽出來 🥚<br>快去轉扭蛋機吧！</div></div>
+  </section>
+</div>
+
+<div id="bar">
+  <button class="btn" id="goBar">🥚 轉一下！</button>
+  <button class="btn ghost" id="autoBar">⚡ 全抽</button>
+</div>
+
+<script>
+/* ===================== 名單 ===================== */
+/* 預設不放任何名單。老師自己把班級名單貼進左邊的輸入框，
+   姓名只留在這台裝置的瀏覽器裡，不會上傳到任何伺服器。 */
+const DEFAULT_ROSTER = '';
+
+const ANIMALS=['🐰','🐻','🐼','🐨','🦊','🐯','🦁','🐮','🐷','🐸','🐵','🐔','🐧','🐦','🦄','🐹','🐶','🐱','🦉','🐢','🦖','🐙','🦀','🐳','🦋','🐝','🦔','🦥','🦦','🐿️','🦩','🐬'];
+
+/* 隊名主題 */
+const THEMES={
+  animal:[['🐰','跳跳兔隊'],['🐻','抱抱熊隊'],['🐼','滾滾貓熊隊'],['🦊','機靈狐狸隊'],['🐯','小虎牙隊'],
+          ['🐨','愛睏尤加利隊'],['🐸','呱呱青蛙隊'],['🐧','搖搖企鵝隊'],['🦁','大獅吼隊'],['🐮','哞哞乳牛隊'],
+          ['🐵','翻跟斗猴子隊'],['🦄','閃亮獨角獸隊'],['🐙','八爪章魚隊'],['🐳','噴水鯨魚隊'],['🦔','刺刺蝟隊'],
+          ['🐝','嗡嗡蜜蜂隊'],['🦖','轟隆恐龍隊'],['🐢','慢慢烏龜隊'],['🦩','紅鶴站站隊'],['🐿️','藏果松鼠隊']],
+  fruit:[['🍓','草莓隊'],['🍎','蘋果隊'],['🍌','香蕉隊'],['🍇','葡萄隊'],['🍉','西瓜隊'],['🍊','橘子隊'],
+         ['🥝','奇異果隊'],['🍑','水蜜桃隊'],['🍍','鳳梨隊'],['🥥','椰子隊'],['🫐','藍莓隊'],['🍒','櫻桃隊'],
+         ['🥭','芒果隊'],['🍐','水梨隊'],['🍈','哈密瓜隊'],['🍋','檸檬隊']],
+  space:[['🚀','火箭隊'],['🪐','土星隊'],['🌟','星星隊'],['🌙','月亮隊'],['☄️','彗星隊'],['🛸','幽浮隊'],
+         ['🌍','地球隊'],['🔭','望遠鏡隊'],['👽','外星人隊'],['🌞','太陽隊'],['🌌','銀河隊'],['🧑‍🚀','太空人隊']],
+  color:[['🔴','紅隊'],['🟠','橘隊'],['🟡','黃隊'],['🟢','綠隊'],['🔵','藍隊'],['🟣','紫隊'],
+         ['🟤','棕隊'],['⚫','黑隊'],['⚪','白隊'],['🩷','粉紅隊'],['🩵','水藍隊'],['🩶','銀灰隊']],
+  sport:[['⚽','足球隊'],['🏀','籃球隊'],['⚾','棒球隊'],['🏐','排球隊'],['🎾','網球隊'],['🏸','羽球隊'],
+         ['🏓','桌球隊'],['🥎','壘球隊'],['🏈','美式隊'],['🥏','飛盤隊'],['🏒','曲棍球隊'],['🥋','柔道隊']]
+};
+const COLORS=['#ff9fb2','#ffe08a','#9fe0d0','#a8d8ff','#c9b6ff','#ffc59f','#b8e986','#ffb3d9'];
+
+/* ===================== 狀態 ===================== */
+let mode='single', repeat=false, soundOn=true, theme='animal';
+let roster=[], pool=[], groups=[], teams=[], cursor=0, plan={}, busy=false, history=[], autoTimer=null;
+const $=id=>document.getElementById(id);
+const machine=$('machine'), cap=$('cap'), lastCard=$('lastCard');
+
+(function(){
+  let h='';
+  for(let i=0;i<26;i++){
+    const s=16+Math.random()*12, x=6+Math.random()*88, y=18+Math.random()*74;
+    h+=`<i style="width:${s}px;height:${s}px;left:${x}%;top:${y}%;background:${COLORS[i%COLORS.length]};
+        --jx:${(Math.random()*10-5).toFixed(1)}px;--jy:${(Math.random()*10-5).toFixed(1)}px"></i>`;
+  }
+  $('balls').innerHTML=h;
+})();
+
+/* ===================== 音效 ===================== */
+let ac=null, noiseBuf=null;
+function audio(){
+  if(!soundOn) return null;
+  if(!ac){
+    try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+    noiseBuf=ac.createBuffer(1, Math.floor(ac.sampleRate*0.4), ac.sampleRate);
+    const d=noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  }
+  if(ac.state==='suspended') ac.resume();
+  return ac;
+}
+function tone(freq,dur,type,vol,delay,glideTo){
+  const a=audio(); if(!a) return;
+  const t=a.currentTime+(delay||0), o=a.createOscillator(), g=a.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+  if(glideTo) o.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol||.15,t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+dur+.03);
+}
+function click(delay,vol,cut){
+  const a=audio(); if(!a) return;
+  const t=a.currentTime+(delay||0), s=a.createBufferSource(); s.buffer=noiseBuf;
+  const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=cut||1600; f.Q.value=1.4;
+  const g=a.createGain(); g.gain.setValueAtTime(vol||.28,t); g.gain.exponentialRampToValueAtTime(.0001,t+.07);
+  s.connect(f); f.connect(g); g.connect(a.destination); s.start(t); s.stop(t+.09);
+}
+function sndCrank(){ audio(); let t=0;
+  for(let i=0;i<26;i++){ click(t,.16+i*.006,900+Math.random()*2200); t+=0.075-i*0.0016; }
+  tone(70,.95,'sawtooth',.10,0,140); tone(300,.9,'square',.05,0,520); }
+function sndDrop(){ tone(300,.55,'triangle',.14,0,1250); click(.60,.42,700); tone(150,.22,'sine',.20,.60,90); click(.80,.22,1200); }
+function sndReveal(){ [784,988,1319,1568].forEach((f,i)=>tone(f,.42,'triangle',.17,i*.055)); tone(2093,.3,'sine',.09,.16); click(0,.20,3200); }
+function sndFile(){ tone(700,.10,'sine',.15,0,1000); tone(1100,.09,'sine',.10,.06); }
+function sndGroupDone(){ [659,784,1047].forEach((f,i)=>tone(f,.26,'triangle',.16,i*.10)); }
+function sndFinish(){
+  [523,659,784,1047,1319].forEach((f,i)=>tone(f,.30,'triangle',.17,i*.11));
+  [1047,1319,1568,2093].forEach((f,i)=>tone(f,.50,'sine',.12,.60+i*.06));
+  for(let i=0;i<10;i++) click(.62+i*.05,.16,2000+Math.random()*3000);
+}
+
+/* ===================== 名單 / 計畫 ===================== */
+function parseRoster(){
+  return $('roster').value.split('\n').map(s=>s.trim()).filter(Boolean).map((line,i)=>{
+    const m=line.match(/^(\d+)[\s.、,-]+(.+)$/);
+    return m ? {no:m[1],name:m[2].trim(),emo:ANIMALS[i%ANIMALS.length]}
+             : {no:'', name:line,        emo:ANIMALS[i%ANIMALS.length]};
+  });
+}
+function buildPlan(){
+  roster=parseRoster();
+  const N=roster.length;
+  if(!N) return {err:'名單是空的，先填幾個名字吧！'};
+  if(mode==='single') return {sizes:[N],single:true,total:N,N};
+  const g=Math.max(1,parseInt($('nGroups').value)||0);
+  const pr=parseInt($('nPer').value), per=(pr>0)?pr:null;
+  let sizes=[];
+  if(per===null){
+    if(repeat) return {err:'「可重複」模式請填寫「每組人數」，才知道要抽幾次喔！'};
+    if(g>N) return {err:`只有 ${N} 人，沒辦法分成 ${g} 組。`};
+    const base=Math.floor(N/g), r=N%g;
+    sizes=Array.from({length:g},(_,i)=>base+(i<r?1:0));
+  }else{
+    sizes=Array(g).fill(per);
+    if(!repeat&&g*per>N) return {err:`不重複最多只能抽 ${N} 人，但 ${g} 組 × ${per} 人 = ${g*per} 人。請改「可重複」或調小數字。`};
+  }
+  return {sizes,single:false,total:sizes.reduce((a,b)=>a+b,0),N};
+}
+const shuffle=a=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[b[i],b[j]]=[b[j],b[i]];}return b;};
+
+/* ===================== 隊名 ===================== */
+function customList(){
+  return $('customTeams').value.split('\n').map(s=>s.trim()).filter(Boolean).map((line,i)=>{
+    /* 開頭若是符號/emoji（非中英數），拆成圖示 + 名稱 */
+    const m=line.match(/^([^\w一-鿿A-Za-z0-9]{1,5})\s+(.+)$/);
+    return m ? [m[1],m[2].trim()] : ['🏳️',line];
+  });
+}
+function rollTeams(n,keepCustom){
+  let src;
+  if(theme==='custom'){
+    const c=customList();
+    src=c.length?c:[['✏️','（請在左邊輸入隊名）']];
+    /* 自訂隊名照使用者打的順序，不隨機 */
+    const out=[];
+    for(let i=0;i<n;i++){
+      const p=src[i%src.length];
+      out.push(keepCustom&&teams[i]&&teams[i].custom?teams[i]:{emo:p[0],name:p[1],custom:false});
+    }
+    return out;
+  }
+  const picked=shuffle(THEMES[theme]||THEMES.animal);
+  const out=[];
+  for(let i=0;i<n;i++){
+    const p=picked[i%picked.length];
+    out.push(keepCustom&&teams[i]&&teams[i].custom?teams[i]:{emo:p[0],name:p[1],custom:false});
+  }
+  return out;
+}
+
+/* ===================== 開新局 ===================== */
+function newRound(silent){
+  const p=buildPlan();
+  if(p.err){ setHint(p.err,true); return false; }
+  plan=p; cursor=0; history=[];
+  groups=p.sizes.map(()=>[]);
+  teams=rollTeams(p.sizes.length,true);
+  pool=repeat?roster.slice():shuffle(roster);
+  $('result').innerHTML='<div class="empty">還沒有人被抽出來 🥚<br>快去轉扭蛋機吧！</div>';
+  if(!silent){
+    cap.className='capsule';
+    lastCard.className='lastcard idle';
+    lastCard.querySelector('.lc-emo').textContent='🥚';
+    lastCard.querySelector('.lc-no').textContent='';
+    const nm=lastCard.querySelector('.lc-nm'); nm.textContent='還沒開始'; nm.classList.remove('long');
+    lastCard.querySelector('.lc-team').textContent='';
+  }
+  $('hist').innerHTML='';
+  updatePool(); updateHint();
+  return true;
+}
+
+/* ===================== 結果卡 ===================== */
+function ensureCard(i){
+  const box=$('result');
+  if(!box.querySelector('.groups')) box.innerHTML='<div class="groups"></div>';
+  const grid=box.querySelector('.groups');
+  let card=grid.querySelector(`[data-gi="${i}"]`);
+  if(!card){
+    card=document.createElement('div');
+    card.className='grp'; card.dataset.gi=i;
+    const t=teams[i]||{emo:'🎯',name:'第 '+(i+1)+' 組'};
+    card.innerHTML=
+      `<div class="ghead"><span class="e">${plan.single?'🎯':t.emo}</span>`+
+      (plan.single ? `<span class="tname" style="border:none">抽出來的人</span>`
+                   : `<input class="tname" value="${String(t.name).replace(/"/g,'&quot;')}" maxlength="14">`)+
+      `<span class="gcount"></span></div><ul></ul>`;
+    const inp=card.querySelector('input.tname');
+    if(inp) inp.addEventListener('input',()=>{ teams[i]={emo:teams[i].emo,name:inp.value,custom:true}; });
+    grid.appendChild(card);
+  }
+  return card;
+}
+function paintCard(i,newest){
+  const card=ensureCard(i), need=plan.sizes[i], got=groups[i].length;
+  card.querySelector('.gcount').textContent=`${got}/${need}`;
+  card.classList.toggle('done',got>=need);
+  card.querySelector('ul').innerHTML=
+    groups[i].map((p,k)=>`<li class="${(newest&&k===got-1)?'new':''}"><span>${p.emo}</span><span class="n">${p.no}</span><span>${p.name}</span></li>`).join('')
+    + Array.from({length:Math.max(0,need-got)},()=>`<li class="slotmark">🥚</li>`).join('');
+  [...card.parentNode.children].forEach(c=>c.classList.remove('active'));
+  if(got<need) card.classList.add('active');
+}
+function updatePool(){
+  $('pool').textContent = plan.total
+    ? `已抽 ${cursor} / ${plan.total} 人 ・ ${repeat?'♾️ 可重複，抽不完':`剩 ${pool.length} 人在機器裡`}` : '';
+}
+
+/* ===================== 飛進組別 ===================== */
+function flyToGroup(gi,done){
+  const card=ensureCard(gi);
+  /* 上課模式看不到結果區，就略過飛行動畫 */
+  if(!card.offsetParent){ sndFile(); done(); return; }
+  const target=card.querySelector('.slotmark')||card.querySelector('ul');
+  const from=lastCard.getBoundingClientRect(), to=target.getBoundingClientRect();
+  const fly=lastCard.cloneNode(true);
+  fly.className='lastcard flycard';
+  fly.style.cssText=`position:fixed;left:${from.left}px;top:${from.top}px;width:${from.width}px;
+    height:${from.height}px;margin:0;z-index:9999;opacity:1`;
+  document.body.appendChild(fly);
+  requestAnimationFrame(()=>{
+    fly.style.transition='transform .58s cubic-bezier(.5,-.15,.3,1.15),opacity .58s ease-in';
+    fly.style.transform=`translate(${to.left+to.width/2-(from.left+from.width/2)}px,
+      ${to.top+to.height/2-(from.top+from.height/2)}px) scale(.4) rotate(7deg)`;
+    fly.style.opacity='.15';
+  });
+  setTimeout(()=>{ fly.remove(); sndFile(); done(); },600);
+}
+
+/* ===================== 抽一顆 ===================== */
+function drawOne(){
+  if(busy) return;
+  if(!plan.sizes||cursor>=plan.total){ if(!newRound(true)) return; }
+  let person;
+  if(repeat){ person=roster[(Math.random()*roster.length)|0]; }
+  else{ if(!pool.length){ setHint('大家都被抽走啦～',false); return; } person=pool.pop(); }
+
+  let gi=0,acc=0;
+  for(let i=0;i<plan.sizes.length;i++){ if(cursor<acc+plan.sizes[i]){gi=i;break;} acc+=plan.sizes[i]; }
+  if(plan.single) gi=0;
+  cursor++; busy=true;
+
+  machine.className='machine shake turn'; sndCrank(); updatePool();
+
+  setTimeout(()=>{
+    machine.className='machine';
+    cap.className='capsule';
+    cap.querySelector('.half.bot').style.background=COLORS[(Math.random()*COLORS.length)|0];
+    void cap.offsetWidth; cap.classList.add('drop'); sndDrop();
+
+    setTimeout(()=>{
+      cap.classList.add('open'); sndReveal();
+      lastCard.className='lastcard pop';
+      lastCard.querySelector('.lc-emo').textContent=person.emo;
+      lastCard.querySelector('.lc-no').textContent=person.no?person.no+' 號':'';
+      const nm=lastCard.querySelector('.lc-nm');
+      nm.textContent=person.name;                        /* 完整姓名，不截斷 */
+      nm.classList.toggle('long',person.name.length>=5); /* 太長就自動縮小 */
+      lastCard.querySelector('.lc-team').textContent=plan.single?'':((teams[gi]&&teams[gi].name)||'');
+      history.unshift(person.name);
+      $('hist').innerHTML=history.slice(0,10).map((n,i)=>`<span>${i===0?'剛剛：':''}${n}</span>`).join('');
+
+      setTimeout(()=>{
+        ensureCard(gi); paintCard(gi,false);
+        flyToGroup(gi,()=>{
+          groups[gi].push(person); paintCard(gi,true);
+          if(groups[gi].length>=plan.sizes[gi]&&!plan.single&&cursor<plan.total) sndGroupDone();
+          busy=false;
+          if(cursor>=plan.total){ sndFinish(); setHint('全部抽完囉！🎉 按「重新開始」再玩一次。',false); }
+          else updateHint();
+        });
+      },950);
+    },950);
+  },1000);
+}
+
+function autoAll(){
+  if(autoTimer){ clearTimeout(autoTimer); autoTimer=null; setAutoLabel(false); return; }
+  if(!plan.sizes||cursor>=plan.total){ if(!newRound(true)) return; }
+  setAutoLabel(true);
+  const step=()=>{
+    if(cursor>=plan.total){ autoTimer=null; setAutoLabel(false); return; }
+    drawOne(); autoTimer=setTimeout(step,3900);
+  };
+  step();
+}
+function setAutoLabel(running){
+  $('auto').textContent=running?'⏸ 停下來':'⚡ 一次抽完';
+  $('autoBar').textContent=running?'⏸ 停':'⚡ 全抽';
+}
+
+/* ===================== 提示 ===================== */
+function setHint(t,warn){ const h=$('hint'); h.textContent=t; h.className='hint'+(warn?' warn':''); }
+function updateHint(){
+  const p=buildPlan(); if(p.err){ setHint(p.err,true); return; }
+  if(mode==='single'){
+    setHint(repeat?`單抽・可重複：每次從 ${p.N} 人裡隨機抽一位（可能重複抽到同一人）。`
+                  :`單抽・不重複：${p.N} 人輪流抽完，不會重覆。`,false);
+  }else{
+    const s=p.sizes,same=s.every(x=>x===s[0]);
+    setHint(`共 ${s.length} 組，${same?`每組 ${s[0]} 人`:`人數 ${s.join('／')}`}，合計 ${p.total} 人`
+      +`（${repeat?'可重複，同一人可能出現在多組':'不重複'}）。`,false);
+  }
+}
+
+/* ===================== 匯出 ===================== */
+function resultText(){
+  if(!groups.some(g=>g.length)) return '';
+  return groups.map((g,i)=>{
+    const t=teams[i]||{emo:'',name:'第 '+(i+1)+' 組'};
+    return (plan.single?'🎯 抽出來的人':`${t.emo} ${t.name}`)+'\n'
+      + g.map(p=>`  ${p.no?p.no+' 號 ':''}${p.name}`).join('\n');
+  }).join('\n\n');
+}
+function stamp(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+}
+function saveBlob(blob,filename){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+function toast(btn,msg){ const o=btn.textContent; btn.textContent=msg; setTimeout(()=>btn.textContent=o,1600); }
+
+/* 一鍵下載 PNG：直接用 canvas 畫，不需要任何外部套件 */
+function downloadPNG(){
+  if(!groups.some(g=>g.length)){ setHint('還沒有分組結果可以下載喔！',true); return; }
+  const FONT='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",sans-serif';
+  const dpr=Math.min(3,window.devicePixelRatio||1)*2;
+  const cols=Math.min(3,groups.length), rows=Math.ceil(groups.length/cols);
+  const CW=320, GAP=18, PAD=30, HEAD=104, LH=38;
+  const maxRows=Math.max(...groups.map((g,i)=>Math.max(g.length,plan.sizes[i]||g.length)));
+  const CH=70+maxRows*LH+14;
+  const W=PAD*2+cols*CW+(cols-1)*GAP;
+  const H=HEAD+rows*(CH+GAP)-GAP+PAD+34;
+
+  const cv=document.createElement('canvas');
+  cv.width=W*dpr; cv.height=H*dpr;
+  const c=cv.getContext('2d'); c.scale(dpr,dpr);
+
+  const rr=(x,y,w,h,r)=>{c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();};
+
+  const bg=c.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,'#fdf1e3'); bg.addColorStop(.55,'#ffe9f0'); bg.addColorStop(1,'#e9f6ff');
+  c.fillStyle=bg; c.fillRect(0,0,W,H);
+
+  c.textAlign='center'; c.fillStyle='#f56f8c'; c.font=`bold 32px ${FONT}`;
+  c.fillText('🐾 扭蛋分組結果 🐾',W/2,52);
+  c.fillStyle='#8d7b6b'; c.font=`15px ${FONT}`;
+  const d=new Date();
+  c.fillText(`${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ・ 共 ${groups.length} 組 ${groups.reduce((a,g)=>a+g.length,0)} 人`,W/2,78);
+  c.textAlign='left';
+
+  groups.forEach((g,i)=>{
+    const x=PAD+(i%cols)*(CW+GAP), y=HEAD+Math.floor(i/cols)*(CH+GAP);
+    c.fillStyle='rgba(214,180,150,.28)'; rr(x,y+6,CW,CH,22); c.fill();
+    c.fillStyle='#fff'; rr(x,y,CW,CH,22); c.fill();
+    c.strokeStyle='#f0e2d2'; c.lineWidth=3; rr(x,y,CW,CH,22); c.stroke();
+
+    const t=teams[i]||{emo:'🎯',name:'第 '+(i+1)+' 組'};
+    c.font=`26px ${FONT}`; c.fillText(plan.single?'🎯':t.emo,x+18,y+42);
+    c.fillStyle='#5b4636'; c.font=`bold 19px ${FONT}`;
+    c.fillText(plan.single?'抽出來的人':t.name,x+54,y+41);
+    c.fillStyle='#8d7b6b'; c.font=`13px ${FONT}`; c.textAlign='right';
+    c.fillText(`${g.length} 人`,x+CW-18,y+41); c.textAlign='left';
+
+    g.forEach((p,k)=>{
+      const ly=y+58+k*LH;
+      c.fillStyle='#fff8ef'; rr(x+14,ly,CW-28,LH-8,12); c.fill();
+      c.font=`18px ${FONT}`; c.fillText(p.emo,x+24,ly+21);
+      c.fillStyle='#8d7b6b'; c.font=`12px ${FONT}`; c.fillText(p.no||'',x+50,ly+21);
+      c.fillStyle='#5b4636'; c.font=`17px ${FONT}`; c.fillText(p.name,x+80,ly+21);
+    });
+  });
+
+  c.fillStyle='#b8a695'; c.font=`13px ${FONT}`; c.textAlign='center';
+  c.fillText('🐾 動物扭蛋分組機',W/2,H-16);
+
+  cv.toBlob(b=>{
+    if(!b){ setHint('這台裝置不支援圖片下載，請改用「下載文字檔」。',true); return; }
+    saveBlob(b,`扭蛋分組結果_${stamp()}.png`);
+    toast($('dlPng'),'✅ 已下載！');
+  },'image/png');
+}
+function downloadTXT(){
+  const txt=resultText();
+  if(!txt){ setHint('還沒有分組結果可以下載喔！',true); return; }
+  const head=`扭蛋分組結果  ${new Date().toLocaleString('zh-TW')}\n`+'='.repeat(28)+'\n\n';
+  saveBlob(new Blob([head+txt+'\n'],{type:'text/plain;charset=utf-8'}),`扭蛋分組結果_${stamp()}.txt`);
+  toast($('dlTxt'),'✅ 已下載！');
+}
+
+/* ===================== 事件 ===================== */
+function seg(id,cb){
+  $(id).addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    [...e.currentTarget.children].forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); cb(b.dataset.v);
+  });
+}
+seg('segMode',v=>{
+  mode=v;
+  $('grpRow').style.display=(v==='group')?'':'none';
+  $('themeRow').style.display=(v==='group')?'':'none';
+  newRound();
+});
+seg('segRep', v=>{ repeat=(v==='yes'); newRound(); });
+['nGroups','nPer','roster'].forEach(id=>$(id).addEventListener('input',()=>newRound()));
+$('theme').addEventListener('change',e=>{
+  theme=e.target.value;
+  $('customRow').style.display=(theme==='custom')?'':'none';
+  teams=[]; newRound();
+});
+$('customTeams').addEventListener('input',()=>{ teams=[]; newRound(); });
+
+$('go').onclick=drawOne;  $('goBar').onclick=drawOne;
+$('auto').onclick=autoAll; $('autoBar').onclick=autoAll;
+$('reset').onclick=()=>{ if(autoTimer){clearTimeout(autoTimer);autoTimer=null;setAutoLabel(false);} busy=false; newRound(); };
+$('rename').onclick=()=>{
+  if(plan.single){ setHint('單抽模式沒有分組，切到「👥 分組」才有隊名喔！',true); return; }
+  teams=rollTeams(plan.sizes?plan.sizes.length:5,false);
+  document.querySelectorAll('.grp').forEach(c=>{
+    const i=+c.dataset.gi;
+    c.querySelector('.e').textContent=teams[i].emo;
+    const inp=c.querySelector('input.tname'); if(inp) inp.value=teams[i].name;
+  });
+  tone(880,.12,'triangle',.15,0); tone(1175,.14,'triangle',.13,.09);
+};
+$('sound').onclick=e=>{ soundOn=!soundOn; e.target.textContent=soundOn?'🔊 音效：開':'🔇 音效：關'; if(soundOn) tone(880,.12,'triangle',.15,0); };
+$('copy').onclick=()=>{
+  const txt=resultText();
+  if(!txt){ setHint('還沒有分組結果可以複製喔！',true); return; }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>toast($('copy'),'✅ 已複製！'),()=>toast($('copy'),'⚠️ 複製失敗'));
+  }else{
+    const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');toast($('copy'),'✅ 已複製！');}catch(e){}
+    ta.remove();
+  }
+};
+$('dlPng').onclick=downloadPNG;
+$('dlTxt').onclick=downloadTXT;
+
+/* 上課模式（投影 / iPad 展示） */
+$('modeBtn').onclick=()=>{
+  const on=document.body.classList.toggle('focusmode');
+  $('modeBtn').textContent=on?'✖️ 離開上課模式':'📺 上課模式';
+  if(on){ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }
+  else if(document.fullscreenElement&&document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
+  window.scrollTo(0,0);
+};
+
+/* 啟動 */
+$('roster').value=DEFAULT_ROSTER;
+newRound();
+setHint('👋 先把班級名單貼到左下角的「學生名單」框裡，就可以開始扭蛋囉！',false);
+</script>
+</body>
+</html>
