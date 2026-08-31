@@ -9,8 +9,10 @@
 <title>🐾 動物扭蛋分組機 🐾</title>
 <style>
   :root{
-    --pink:#ff9fb2; --pink-d:#f56f8c; --cream:#fff8ef; --mint:#9fe0d0;
-    --lemon:#ffe08a; --ink:#5b4636; --ink-l:#8d7b6b; --line:#f0e2d2;
+    /* 投影用的加深配色：提高彩度與對比，遠處也看得清楚 */
+    --pink:#ef5f85; --pink-d:#c42a58; --pink-s:#9c1c43;   /* 按鈕陰影 */
+    --cream:#fff4e4; --mint:#3fae93; --lemon:#f0b81f;
+    --ink:#2e2016; --ink-l:#634c3b; --line:#c9b096;
     --safe-b:env(safe-area-inset-bottom,0px);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -20,24 +22,47 @@
     font-family:"Chalkboard SE","Comic Sans MS","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
     color:var(--ink); min-height:100vh;
     background:
-      radial-gradient(circle at 12% 18%, #fff 0 9px, transparent 10px),
-      radial-gradient(circle at 78% 42%, #fff 0 7px, transparent 8px),
-      radial-gradient(circle at 35% 78%, #fff 0 11px, transparent 12px),
-      linear-gradient(180deg,#fdf1e3 0%, #ffe9f0 55%, #e9f6ff 100%);
+      radial-gradient(circle at 12% 18%, rgba(255,255,255,.75) 0 9px, transparent 10px),
+      radial-gradient(circle at 78% 42%, rgba(255,255,255,.75) 0 7px, transparent 8px),
+      radial-gradient(circle at 35% 78%, rgba(255,255,255,.75) 0 11px, transparent 12px),
+      linear-gradient(180deg,#f0cfae 0%, #f7abc3 55%, #a8cfee 100%);
     background-size:260px 260px,220px 220px,300px 300px,100% 100%;
     background-attachment:fixed;
   }
   h1{text-align:center;margin:0 0 4px;font-size:clamp(22px,5vw,36px);color:var(--pink-d);
-     text-shadow:2px 3px 0 #fff,4px 6px 0 rgba(245,111,140,.18);letter-spacing:1px}
+     text-shadow:2px 3px 0 #fff,4px 6px 0 rgba(150,25,65,.3);letter-spacing:1px}
   .sub{text-align:center;color:var(--ink-l);margin:0 0 18px;font-size:13px}
   .wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
   .card{background:var(--cream);border:3px solid #fff;border-radius:24px;
-        box-shadow:0 8px 0 rgba(214,180,150,.26),0 14px 26px rgba(160,120,100,.12);padding:16px}
+        box-shadow:0 8px 0 rgba(150,110,70,.35),0 14px 26px rgba(120,80,50,.2);padding:16px}
   .card h2{margin:0 0 12px;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .card h2 small{font-weight:400;font-size:11px;color:var(--ink-l)}
 
   /* ============ 扭蛋機 ============ */
   .stage{display:flex;flex-direction:column;align-items:center}
+  /* 整台機器放大成一顆大按鈕。連落蛋區一起縮放，扭蛋才會對準出口。
+     --mz 是放大倍率，下面用 padding-bottom 補回放大後多出來的高度。 */
+  .mzone{
+    --mz:1.42;
+    margin-top:36px;                 /* 耳朵放大後會往上突出，留空間 */
+    transform:scale(var(--mz)); transform-origin:top center;
+    cursor:pointer; user-select:none; -webkit-user-select:none;
+    transition:filter .15s, transform .15s;
+    border-radius:26px;
+  }
+  .mzone:hover{filter:brightness(1.04) saturate(1.05)}
+  .mzone:active{transform:scale(calc(var(--mz) * .97))}
+  .mzone:focus-visible{outline:4px solid var(--pink-d);outline-offset:6px}
+  .mzone.busy{cursor:progress}
+  /* 佔位：撐出放大後真正需要的高度（在 JS 啟動時依實際量測校正） */
+  .mzone-pad{width:100%;height:0}
+  .taphint{
+    margin-top:10px;margin-bottom:2px;font-size:15px;font-weight:700;color:var(--pink-d);
+    background:#fff;border:3px solid var(--pink);border-radius:16px;padding:7px 16px;
+    box-shadow:0 4px 0 rgba(150,110,70,.35);animation:tapPulse 1.9s ease-in-out infinite;
+  }
+  @keyframes tapPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .taphint.off{display:none}
   .machine{position:relative;width:206px;transform-origin:50% 100%;transition:transform .3s}
   .machine.shake{animation:shake .48s cubic-bezier(.36,.07,.19,.97) 2}
   @keyframes shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-8px) rotate(-3.5deg)}
@@ -46,8 +71,8 @@
   .ear.l{left:22px;transform:rotate(-18deg)} .ear.r{right:22px;transform:rotate(18deg)}
   .ear::after{content:"";position:absolute;inset:8px 8px 11px;background:#ffd3dd;border-radius:50%}
   .dome{position:relative;width:206px;height:160px;border-radius:110px 110px 24px 24px;
-    background:linear-gradient(160deg,rgba(255,255,255,.92),rgba(190,232,255,.72));
-    border:5px solid #fff;box-shadow:inset 0 -14px 22px rgba(120,180,220,.28);overflow:hidden;z-index:1}
+    background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(138,197,238,.85));
+    border:5px solid #fff;box-shadow:inset 0 -14px 22px rgba(60,130,180,.4);overflow:hidden;z-index:1}
   .dome .shine{position:absolute;top:20px;left:26px;width:34px;height:54px;background:rgba(255,255,255,.85);border-radius:50%;transform:rotate(-22deg)}
   .balls{position:absolute;inset:0}
   .balls i{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.85)}
@@ -56,14 +81,14 @@
   .mbody{position:relative;width:192px;margin:-6px auto 0;height:118px;
     background:linear-gradient(180deg,var(--pink),var(--pink-d));border:5px solid #fff;border-radius:20px;z-index:2}
   .face{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:14px;color:#fff;letter-spacing:8px;opacity:.9}
-  .cheek{position:absolute;top:18px;width:13px;height:8px;background:#ffd0da;border-radius:50%;opacity:.85}
+  .cheek{position:absolute;top:18px;width:13px;height:8px;background:#ffb3c4;border-radius:50%;opacity:.85}
   .cheek.l{left:44px} .cheek.r{right:44px}
   .knob{position:absolute;left:20px;bottom:18px;width:46px;height:46px;border-radius:50%;
     background:radial-gradient(circle at 34% 30%,#fff,#ffe08a 60%,#f2c14e);border:4px solid #fff;display:grid;place-items:center}
   .knob b{width:6px;height:26px;background:#fff;border-radius:4px;transition:transform .95s cubic-bezier(.5,-.3,.3,1.4)}
   .machine.turn .knob b{transform:rotate(1080deg)}
-  .slot{position:absolute;right:20px;bottom:16px;width:68px;height:50px;border-radius:12px;background:#7c4a52;border:4px solid #fff;box-shadow:inset 0 6px 10px rgba(0,0,0,.35)}
-  .legs{width:168px;height:14px;margin:-4px auto 0;background:#e0b48f;border:4px solid #fff;border-radius:0 0 14px 14px}
+  .slot{position:absolute;right:20px;bottom:16px;width:68px;height:50px;border-radius:12px;background:#54262f;border:4px solid #fff;box-shadow:inset 0 6px 10px rgba(0,0,0,.35)}
+  .legs{width:168px;height:14px;margin:-4px auto 0;background:#b8834f;border:4px solid #fff;border-radius:0 0 14px 14px}
 
   .chute{position:relative;width:100%;height:136px;margin-top:4px}
   .capsule{position:absolute;left:50%;top:-24px;width:104px;height:104px;margin-left:-52px;opacity:0}
@@ -83,7 +108,7 @@
   .lastcard{
     width:min(340px,100%); margin-top:-2px; background:#fff;
     border:4px solid var(--lemon); border-radius:22px; padding:12px 16px;
-    display:flex; align-items:center; gap:13px; box-shadow:0 6px 0 rgba(214,180,150,.3);
+    display:flex; align-items:center; gap:13px; box-shadow:0 6px 0 rgba(150,110,70,.4);
   }
   .lastcard.idle{opacity:.55;border-color:var(--line)}
   .lastcard.pop{animation:cardPop .6s cubic-bezier(.34,1.8,.5,1)}
@@ -122,14 +147,14 @@
   .hint{font-size:12.5px;color:var(--ink-l);background:#fff6e8;border:2px dashed var(--lemon);border-radius:14px;padding:9px 11px;line-height:1.6}
   .hint.warn{background:#ffeef1;border-color:var(--pink);color:var(--pink-d)}
   .btn{width:100%;border:none;font:inherit;font-size:17px;font-weight:700;color:#fff;cursor:pointer;
-    background:var(--pink-d);border-radius:19px;padding:14px;box-shadow:0 6px 0 #d4536f;transition:.12s;min-height:52px}
-  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #d4536f}
+    background:var(--pink-d);border-radius:19px;padding:14px;box-shadow:0 6px 0 var(--pink-s);transition:.12s;min-height:52px}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--pink-s)}
   .btn.ghost{background:#fff;color:var(--ink-l);box-shadow:0 4px 0 var(--line);font-size:14px;padding:12px;min-height:46px}
   .btn.ghost:active{box-shadow:0 1px 0 var(--line)}
   .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
   .saverow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
   #saveState{flex:1;min-width:150px;font-size:11.5px;color:var(--ink-l);line-height:1.5}
-  #saveState.ok{color:#3f9d86}
+  #saveState.ok{color:#1f7a63;font-weight:600}
   .btn.mini{width:auto;flex:0 0 auto;padding:8px 14px;min-height:38px;font-size:12px;border-radius:14px}
 
   /* ============ 結果 ============ */
@@ -148,11 +173,11 @@
   .gcount{font-size:11px;color:var(--ink-l);white-space:nowrap;flex:0 0 auto}
   .grp ul{list-style:none;margin:0;padding:0}
   .grp li{display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:12px;margin-bottom:5px;
-          font-size:15px;background:var(--cream);overflow-wrap:anywhere}
+          font-size:16px;font-weight:600;background:var(--cream);overflow-wrap:anywhere}
   .grp li.new{animation:pop .45s cubic-bezier(.34,1.8,.5,1)}
   @keyframes pop{0%{opacity:0;transform:scale(.4) rotate(-8deg)}60%{transform:scale(1.08)}100%{opacity:1;transform:none}}
   .grp li .n{font-size:11px;color:var(--ink-l);min-width:20px;flex:0 0 auto}
-  .grp li.slotmark{background:transparent;border:2px dashed var(--line);color:#d6c8ba;justify-content:center;font-size:13px;padding:5px}
+  .grp li.slotmark{background:transparent;border:2px dashed var(--line);color:#a58a6b;justify-content:center;font-size:13px;padding:5px}
   .empty{color:var(--ink-l);font-size:14px;text-align:center;padding:30px 10px;line-height:1.8}
 
   /* ============ 行動裝置 / iPad ============ */
@@ -164,7 +189,7 @@
   #bar .btn.ghost{flex:0 0 96px}
   #modeBtn{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:600;
     border:3px solid #fff;background:#fff;color:var(--ink-l);font:inherit;font-size:13px;
-    padding:9px 13px;border-radius:16px;box-shadow:0 4px 0 rgba(214,180,150,.35);cursor:pointer;min-height:42px}
+    padding:9px 13px;border-radius:16px;box-shadow:0 4px 0 rgba(150,110,70,.45);cursor:pointer;min-height:42px}
 
   @media(max-width:900px){
     body{padding-left:10px;padding-right:10px}
@@ -175,10 +200,9 @@
     .hist{max-width:100%}
   }
   @media(max-width:420px){
-    .machine{width:186px}.dome{width:186px;height:146px;border-radius:100px 100px 22px 22px}
-    .mbody{width:174px;height:108px}.legs{width:152px}
-    .cheek.l{left:38px}.cheek.r{right:38px}
+    .mzone{--mz:1.22;margin-top:28px}
     .groups{grid-template-columns:1fr}
+    body.focusmode .mzone{--mz:1.45;margin-top:36px}
   }
 
   /* ============ 上課模式（投影 / 載具全螢幕） ============ */
@@ -186,7 +210,7 @@
   body.focusmode h1,body.focusmode .sub{display:none}
   body.focusmode #panelSettings,body.focusmode #panelResult,body.focusmode .hist{display:none}
   body.focusmode .wrap{grid-template-columns:1fr;max-width:760px}
-  body.focusmode .machine{transform:scale(1.12);margin-bottom:14px}
+  body.focusmode .mzone{--mz:1.85;margin-top:52px}
   body.focusmode .lastcard{width:min(620px,100%);padding:22px 26px;gap:20px;border-width:6px}
   body.focusmode .lc-emo{font-size:clamp(60px,14vw,96px)}
   body.focusmode .lc-no{font-size:clamp(14px,3vw,20px)}
@@ -261,6 +285,14 @@
       <button class="btn ghost" id="rename">🎲 換一批隊名</button>
       <button class="btn ghost" id="sound">🔊 音效：開</button>
     </div>
+    <div class="row" style="margin-top:12px">
+      <label class="lab">音效風格（點一下就試聽）</label>
+      <div class="seg" id="segSnd">
+        <button data-v="lively" class="on">🥁 熱鬧</button>
+        <button data-v="soft">🎹 輕柔</button>
+        <button data-v="retro">🎮 電玩</button>
+      </div>
+    </div>
     <div class="btnrow" style="grid-template-columns:1fr">
       <button class="btn ghost" id="testSound">🔔 測試音效（平板聽不到請按這裡）</button>
     </div>
@@ -288,21 +320,26 @@
 
   <!-- ===== 扭蛋機 ===== -->
   <section class="card stage" id="panelStage">
-    <div class="machine" id="machine">
-      <i class="ear l"></i><i class="ear r"></i>
-      <div class="dome"><div class="balls" id="balls"></div><div class="shine"></div></div>
-      <div class="mbody">
-        <div class="face">◕&nbsp;&nbsp;◕</div>
-        <i class="cheek l"></i><i class="cheek r"></i>
-        <div class="knob"><b></b></div>
-        <div class="slot"></div>
+    <!-- 整台機器就是一顆大按鈕，點下去直接抽 -->
+    <div class="mzone" id="mzone" role="button" tabindex="0" aria-label="點一下扭蛋機開始抽籤">
+      <div class="machine" id="machine">
+        <i class="ear l"></i><i class="ear r"></i>
+        <div class="dome"><div class="balls" id="balls"></div><div class="shine"></div></div>
+        <div class="mbody">
+          <div class="face">◕&nbsp;&nbsp;◕</div>
+          <i class="cheek l"></i><i class="cheek r"></i>
+          <div class="knob"><b></b></div>
+          <div class="slot"></div>
+        </div>
+        <div class="legs"></div>
       </div>
-      <div class="legs"></div>
+
+      <div class="chute"><div class="capsule" id="cap">
+        <div class="half top"></div><div class="half bot"></div>
+      </div></div>
     </div>
 
-    <div class="chute"><div class="capsule" id="cap">
-      <div class="half top"></div><div class="half bot"></div>
-    </div></div>
+    <div class="taphint" id="tapHint">👆 點扭蛋機就可以抽籤</div>
 
     <div class="lastcard idle" id="lastCard">
       <div class="lc-emo">🥚</div>
@@ -377,7 +414,7 @@ function saveState(){
     const ok=lsSet(LS_KEY,JSON.stringify({
       roster:$('roster').value, custom:$('customTeams').value,
       ng:$('nGroups').value, np:$('nPer').value,
-      mode, repeat, theme, sound:soundOn
+      mode, repeat, theme, sound:soundOn, sndTheme
     }));
     const n=$('roster').value.split('\n').filter(s=>s.trim()).length;
     const el=$('saveState');
@@ -401,7 +438,8 @@ function loadState(){
   repeat=!!s.repeat;
   theme=THEMES[s.theme]?s.theme:(s.theme==='custom'?'custom':'animal');
   soundOn=(s.sound!==false);
-  setSeg('segMode',mode); setSeg('segRep',repeat?'yes':'no');
+  sndTheme=['lively','soft','retro'].includes(s.sndTheme)?s.sndTheme:'lively';
+  setSeg('segMode',mode); setSeg('segRep',repeat?'yes':'no'); setSeg('segSnd',sndTheme);
   $('theme').value=theme;
   $('grpRow').style.display=$('themeRow').style.display=(mode==='group')?'':'none';
   $('customRow').style.display=(theme==='custom')?'':'none';
@@ -485,18 +523,73 @@ function click(delay,vol,cut){
   const g=a.createGain(); g.gain.setValueAtTime(vol||.28,t); g.gain.exponentialRampToValueAtTime(.0001,t+.07);
   s.connect(f); f.connect(g); g.connect(a.destination); s.start(t); s.stop(t+.09);
 }
-function sndCrank(){ audio(); let t=0;
-  for(let i=0;i<26;i++){ click(t,.16+i*.006,900+Math.random()*2200); t+=0.075-i*0.0016; }
-  tone(70,.95,'sawtooth',.10,0,140); tone(300,.9,'square',.05,0,520); }
-function sndDrop(){ tone(300,.55,'triangle',.14,0,1250); click(.60,.42,700); tone(150,.22,'sine',.20,.60,90); click(.80,.22,1200); }
-function sndReveal(){ [784,988,1319,1568].forEach((f,i)=>tone(f,.42,'triangle',.17,i*.055)); tone(2093,.3,'sine',.09,.16); click(0,.20,3200); }
-function sndFile(){ tone(700,.10,'sine',.15,0,1000); tone(1100,.09,'sine',.10,.06); }
-function sndGroupDone(){ [659,784,1047].forEach((f,i)=>tone(f,.26,'triangle',.16,i*.10)); }
-function sndFinish(){
-  [523,659,784,1047,1319].forEach((f,i)=>tone(f,.30,'triangle',.17,i*.11));
-  [1047,1319,1568,2093].forEach((f,i)=>tone(f,.50,'sine',.12,.60+i*.06));
-  for(let i=0;i<10;i++) click(.62+i*.05,.16,2000+Math.random()*3000);
+/* ===== 三種音效風格 =====
+   lively 熱鬧：扭蛋碰撞的喀啦聲，最有臨場感（預設）
+   soft   輕柔：木琴般的柔和音，適合安靜的教室或低年級
+   retro  電玩：8-bit 方波，像老遊戲機                       */
+let sndTheme='lively';
+
+function sndCrank(){
+  audio();
+  if(sndTheme==='soft'){
+    let t=0;
+    for(let i=0;i<12;i++){ tone(360+Math.random()*180,.07,'sine',.10,t); t+=.085; }
+    tone(180,.95,'sine',.07,0,240);
+  }else if(sndTheme==='retro'){
+    const sc=[392,523,659,784];
+    for(let i=0;i<16;i++) tone(sc[i%4]*(i<8?1:1.5),.06,'square',.10,i*.058);
+    tone(110,.9,'square',.06,0,180);
+  }else{
+    let t=0;
+    for(let i=0;i<26;i++){ click(t,.16+i*.006,900+Math.random()*2200); t+=.075-i*.0016; }
+    tone(70,.95,'sawtooth',.10,0,140); tone(300,.9,'square',.05,0,520);
+  }
 }
+function sndDrop(){
+  if(sndTheme==='soft'){
+    tone(392,.5,'sine',.12,0,880); tone(262,.3,'sine',.14,.55,196);
+  }else if(sndTheme==='retro'){
+    tone(880,.12,'square',.13,0,440); tone(330,.5,'square',.11,.14,990); tone(196,.16,'square',.16,.62,110);
+  }else{
+    tone(300,.55,'triangle',.14,0,1250); click(.60,.42,700);
+    tone(150,.22,'sine',.20,.60,90); click(.80,.22,1200);
+  }
+}
+function sndReveal(){
+  if(sndTheme==='soft'){
+    [523,659,784,1047].forEach((f,i)=>tone(f,.6,'sine',.14,i*.09));
+  }else if(sndTheme==='retro'){
+    tone(988,.09,'square',.18,0); tone(1319,.42,'square',.16,.09);
+  }else{
+    [784,988,1319,1568].forEach((f,i)=>tone(f,.42,'triangle',.17,i*.055));
+    tone(2093,.3,'sine',.09,.16); click(0,.20,3200);
+  }
+}
+function sndFile(){
+  if(sndTheme==='soft'){ tone(523,.16,'sine',.12,0); tone(784,.14,'sine',.08,.08); }
+  else if(sndTheme==='retro'){ tone(880,.06,'square',.13,0); tone(1175,.07,'square',.11,.06); }
+  else{ tone(700,.10,'sine',.15,0,1000); tone(1100,.09,'sine',.10,.06); }
+}
+function sndGroupDone(){
+  if(sndTheme==='soft'){ [659,880].forEach((f,i)=>tone(f,.45,'sine',.14,i*.14)); }
+  else if(sndTheme==='retro'){ [523,659,784,1047].forEach((f,i)=>tone(f,.09,'square',.14,i*.07)); }
+  else{ [659,784,1047].forEach((f,i)=>tone(f,.26,'triangle',.16,i*.10)); }
+}
+function sndFinish(){
+  if(sndTheme==='soft'){
+    [523,659,784,1047,1319].forEach((f,i)=>tone(f,.7,'sine',.13,i*.16));
+    tone(1568,.9,'sine',.08,.8);
+  }else if(sndTheme==='retro'){
+    [523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.12,'square',.15,i*.11));
+    tone(1568,.5,'square',.14,.85);
+  }else{
+    [523,659,784,1047,1319].forEach((f,i)=>tone(f,.30,'triangle',.17,i*.11));
+    [1047,1319,1568,2093].forEach((f,i)=>tone(f,.50,'sine',.12,.60+i*.06));
+    for(let i=0;i<10;i++) click(.62+i*.05,.16,2000+Math.random()*3000);
+  }
+}
+/* 試聽目前選的風格 */
+function sndPreview(){ sndDrop(); setTimeout(()=>sndReveal(),700); setTimeout(()=>sndGroupDone(),1500); }
 
 /* ===================== 名單 / 計畫 ===================== */
 function parseRoster(){
@@ -650,6 +743,8 @@ function drawOne(){
   cursor++; busy=true;
 
   machine.className='machine shake turn'; sndCrank(); updatePool();
+  mzone.classList.add('busy');
+  $('tapHint').classList.add('off');   /* 抽過一次就不用再提示了 */
   /* 第一次轉的時候順便確認音訊有沒有被裝置擋掉 */
   if(!audioChecked){ audioChecked=true; setTimeout(checkAudio,600); }
 
@@ -676,7 +771,7 @@ function drawOne(){
         flyToGroup(gi,()=>{
           groups[gi].push(person); paintCard(gi,true);
           if(groups[gi].length>=plan.sizes[gi]&&!plan.single&&cursor<plan.total) sndGroupDone();
-          busy=false;
+          busy=false; mzone.classList.remove('busy');
           if(cursor>=plan.total){ sndFinish(); setHint('全部抽完囉！🎉 按「重新開始」再玩一次。',false); }
           else updateHint();
         });
@@ -836,6 +931,24 @@ $('clearRoster').onclick=()=>{
   setHint('👋 名單已清空，貼上新的班級名單就可以開始扭蛋囉！',false);
 };
 
+seg('segSnd',v=>{ sndTheme=v; unlockAudio(); sndPreview(); saveState(); });
+
+/* 直接點扭蛋機就抽 */
+const mzone=$('mzone');
+mzone.addEventListener('click',()=>{ if(!busy) drawOne(); });
+mzone.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if(!busy) drawOne(); }
+});
+
+/* 放大後要補回多出來的高度，否則會蓋到下面的名牌 */
+function fitMachine(){
+  mzone.style.marginBottom='0px';
+  const h=mzone.offsetHeight;
+  const mz=parseFloat(getComputedStyle(mzone).getPropertyValue('--mz'))||1;
+  mzone.style.marginBottom=(Math.round(h*(mz-1))+12)+'px';   /* +12 留一點呼吸空間 */
+}
+window.addEventListener('resize',fitMachine);
+
 $('go').onclick=drawOne;  $('goBar').onclick=drawOne;
 $('auto').onclick=autoAll; $('autoBar').onclick=autoAll;
 $('reset').onclick=()=>{ if(autoTimer){clearTimeout(autoTimer);autoTimer=null;setAutoLabel(false);} busy=false; newRound(); };
@@ -858,12 +971,11 @@ $('sound').onclick=e=>{
 $('testSound').onclick=()=>{
   if(!soundOn){ soundOn=true; $('sound').textContent='🔊 音效：開'; saveState(); }
   unlockAudio();
-  /* 播一段明顯的上行音階，方便判斷是不是真的有聲音 */
-  [523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.18,i*.13));
-  click(.55,.3,1800);
+  /* 用目前選的風格播一段，順便當試聽 */
+  sndPreview();
   setTimeout(()=>{
     if(ac&&ac.state==='running'){
-      setHint('🔔 剛剛有播出一段「Do Mi Sol Do」的音階。如果還是沒聽到，請檢查平板的靜音開關和音量。',false);
+      setHint('🔔 剛剛播了一段目前選的音效風格。如果還是沒聽到，請檢查平板的靜音開關和音量。',false);
     }else{
       checkAudio();
     }
@@ -889,6 +1001,8 @@ $('modeBtn').onclick=()=>{
   $('modeBtn').textContent=on?'✖️ 離開上課模式':'📺 上課模式';
   if(on){ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }
   else if(document.fullscreenElement&&document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
+  fitMachine();                 /* 放大倍率變了，高度要重算 */
+  setTimeout(fitMachine,350);   /* 全螢幕切換完成後再算一次 */
   window.scrollTo(0,0);
 };
 
@@ -896,13 +1010,17 @@ $('modeBtn').onclick=()=>{
 $('roster').value=DEFAULT_ROSTER;
 const restored=loadState();
 newRound();
+fitMachine();
+/* 字體載入完成後尺寸可能會變，再校正一次 */
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitMachine);
+setTimeout(fitMachine,300);
 if(restored){
   const n=$('roster').value.split('\n').filter(s=>s.trim()).length;
   $('saveState').className='ok';
   $('saveState').textContent=`🔒 已記住 ${n} 位學生，只存在這台裝置`;
   updateHint();
 }else{
-  setHint('👋 先把班級名單貼到左下角的「學生名單」框裡，貼一次就會記住，下次打開自動帶入！',false);
+  setHint('👋 先把班級名單貼到「學生名單」框裡，貼一次就會記住，下次打開自動帶入！',false);
 }
 </script>
 </body>
