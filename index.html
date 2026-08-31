@@ -30,7 +30,7 @@
     background-attachment:fixed;
   }
   h1{text-align:center;margin:0 0 4px;font-size:clamp(22px,5vw,36px);color:var(--pink-d);
-     text-shadow:2px 3px 0 #fff,4px 6px 0 rgba(150,25,65,.3);letter-spacing:1px}
+     text-shadow:0 2px 0 rgba(255,255,255,.95),0 4px 12px rgba(150,25,65,.22);letter-spacing:2px}
   .sub{text-align:center;color:var(--ink-l);margin:0 0 18px;font-size:13px}
   .wrap{max-width:1260px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
   /* 上排工具列：欄位自動換行，不夠寬就往下排 */
@@ -65,7 +65,7 @@
     margin-top:46px;                 /* 耳朵放大後會往上突出，留空間 */
     transform:scale(var(--mz)); transform-origin:top center;
     cursor:pointer; user-select:none; -webkit-user-select:none;
-    transition:filter .15s, transform .15s;
+    transition:filter .15s;
     border-radius:26px;
   }
   .mzone:hover{filter:brightness(1.04) saturate(1.05)}
@@ -82,9 +82,13 @@
   @keyframes tapPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
   .taphint.off{display:none}
   .machine{position:relative;width:206px;transform-origin:50% 100%;transition:transform .3s}
-  .machine.shake{animation:shake .48s cubic-bezier(.36,.07,.19,.97) 2}
-  @keyframes shake{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-8px) rotate(-3.5deg)}
-    40%{transform:translateX(7px) rotate(3deg)}60%{transform:translateX(-6px) rotate(-2.4deg)}80%{transform:translateX(5px) rotate(1.8deg)}}
+  .machine.shake{animation:shake .32s cubic-bezier(.36,.07,.19,.97) 3}
+  @keyframes shake{0%,100%{transform:translate(0,0) rotate(0)}
+    15%{transform:translate(-13px,-3px) rotate(-5.5deg)}
+    30%{transform:translate(11px,2px) rotate(5deg)}
+    45%{transform:translate(-10px,-2px) rotate(-4deg)}
+    60%{transform:translate(9px,3px) rotate(3.4deg)}
+    80%{transform:translate(-6px,-1px) rotate(-2deg)}}
   .ear{position:absolute;top:-22px;width:42px;height:42px;background:var(--pink);border:4px solid #fff;border-radius:50% 50% 40% 40%}
   .ear.l{left:22px;transform:rotate(-18deg)} .ear.r{right:22px;transform:rotate(18deg)}
   .ear::after{content:"";position:absolute;inset:8px 8px 11px;background:#ffd3dd;border-radius:50%}
@@ -94,8 +98,14 @@
   .dome .shine{position:absolute;top:20px;left:26px;width:34px;height:54px;background:rgba(255,255,255,.85);border-radius:50%;transform:rotate(-22deg)}
   .balls{position:absolute;inset:0}
   .balls i{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.85)}
-  .machine.shake .balls i{animation:jig .16s infinite alternate}
-  @keyframes jig{to{transform:translate(var(--jx),var(--jy))}}
+  .machine.shake .balls i{animation:jig .34s infinite cubic-bezier(.45,0,.55,1);animation-delay:var(--jd)}
+  @keyframes jig{
+    0%  {transform:translate(0,0) rotate(0)}
+    25% {transform:translate(var(--jx),var(--jy)) rotate(70deg) scale(1.06)}
+    50% {transform:translate(var(--jx2),var(--jy2)) rotate(-55deg) scale(.94)}
+    75% {transform:translate(var(--jy2),var(--jx)) rotate(35deg) scale(1.04)}
+    100%{transform:translate(0,0) rotate(0)}
+  }
   .mbody{position:relative;width:192px;margin:-6px auto 0;height:118px;
     background:linear-gradient(180deg,var(--pink),var(--pink-d));border:5px solid #fff;border-radius:20px;z-index:2}
   .face{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:14px;color:#fff;letter-spacing:8px;opacity:.9}
@@ -108,14 +118,14 @@
   .slot{position:absolute;right:20px;bottom:16px;width:68px;height:50px;border-radius:12px;background:#54262f;border:4px solid #fff;box-shadow:inset 0 6px 10px rgba(0,0,0,.35)}
   .legs{width:168px;height:14px;margin:-4px auto 0;background:#b8834f;border:4px solid #fff;border-radius:0 0 14px 14px}
 
-  .chute{position:relative;width:100%;height:136px;margin-top:4px}
+  .chute{position:relative;width:100%;height:96px;margin-top:2px}
   .capsule{position:absolute;left:50%;top:-24px;width:104px;height:104px;margin-left:-52px;opacity:0}
   .capsule.drop{animation:drop .95s cubic-bezier(.34,1.4,.5,1) forwards}
   @keyframes drop{0%{opacity:0;transform:translate(42px,-64px) scale(.5) rotate(0)}
-    35%{opacity:1;transform:translate(18px,14px) scale(1) rotate(160deg)}
-    60%{transform:translate(0,44px) scale(1) rotate(300deg)}
-    78%{transform:translate(0,16px) scale(1.03) rotate(350deg)}
-    100%{opacity:1;transform:translate(0,38px) scale(1) rotate(360deg)}}
+    35%{opacity:1;transform:translate(18px,4px) scale(1) rotate(160deg)}
+    60%{transform:translate(0,26px) scale(1) rotate(300deg)}
+    78%{transform:translate(0,4px) scale(1.03) rotate(350deg)}
+    100%{opacity:1;transform:translate(0,20px) scale(1) rotate(360deg)}}
   .half{position:absolute;left:0;width:104px;height:52px;transition:transform .5s cubic-bezier(.5,-.4,.3,1.5),opacity .45s}
   .half.top{top:0;border-radius:52px 52px 0 0;background:linear-gradient(180deg,#fff,rgba(255,255,255,.55));border:4px solid #fff;border-bottom:none}
   .half.bot{top:52px;border-radius:0 0 52px 52px;border:4px solid #fff;border-top:none}
@@ -223,7 +233,7 @@
   @media(max-width:420px){
     .mzone{--mz:1.34;margin-top:32px}
     .groups{grid-template-columns:1fr}
-    body.focusmode .mzone{--mz:1.62;margin-top:42px}
+    body.focusmode .mzone{margin-top:36px}
   }
 
   /* ============ 上課模式（投影 / 載具全螢幕） ============ */
@@ -231,14 +241,14 @@
   body.focusmode h1,body.focusmode .sub{display:none}
   body.focusmode #panelSettings,body.focusmode .bottom,body.focusmode .hist,body.focusmode #go{display:none}
   body.focusmode .wrap{grid-template-columns:1fr;max-width:760px}
-  body.focusmode .mzone{--mz:2.35;margin-top:66px}
-  body.focusmode .lastcard{max-width:min(900px,100%);padding:26px 44px;gap:10px;border-width:6px}
-  body.focusmode .lc-main{gap:26px}
-  body.focusmode .lc-emo{font-size:clamp(72px,13vw,124px)}
-  body.focusmode .lc-no{font-size:clamp(18px,3vw,26px)}
-  body.focusmode .lc-nm{font-size:clamp(52px,11vw,104px);letter-spacing:4px}
-  body.focusmode .lc-nm.long{font-size:clamp(40px,8.4vw,78px);letter-spacing:2px}
-  body.focusmode .lc-team{font-size:clamp(17px,3.2vw,26px);padding:8px 22px}
+  body.focusmode .mzone{margin-top:52px}
+  body.focusmode .lastcard{max-width:min(620px,100%);padding:16px 28px;gap:6px;border-width:5px}
+  body.focusmode .lc-main{gap:16px}
+  body.focusmode .lc-emo{font-size:clamp(48px,6.4vw,72px)}
+  body.focusmode .lc-no{font-size:clamp(15px,2vw,20px)}
+  body.focusmode .lc-nm{font-size:clamp(40px,6.2vw,72px);letter-spacing:3px}
+  body.focusmode .lc-nm.long{font-size:clamp(30px,4.8vw,54px);letter-spacing:1px}
+  body.focusmode .lc-team{font-size:clamp(15px,2.2vw,20px);padding:6px 16px}
   body.focusmode .pool{font-size:15px;margin-top:16px}
   body.focusmode #bar{display:flex}
 </style>
@@ -327,7 +337,7 @@
 
   <!-- ===== 中央主角：扭蛋機 ===== -->
   <section class="card stage" id="panelStage">
-    <div class="mcol">
+    <div class="mcol" id="mcol">
     <div class="mzone" id="mzone" role="button" tabindex="0" aria-label="點一下扭蛋機開始抽籤">
       <div class="machine" id="machine">
         <i class="ear l"></i><i class="ear r"></i>
@@ -350,7 +360,7 @@
     </div>
 
     <!-- 右欄：抽出來的人（大字置中）-->
-    <div class="rcol">
+    <div class="rcol" id="rcol">
       <div class="lastcard idle" id="lastCard">
         <div class="lc-main">
           <span class="lc-emo">🥚</span>
@@ -482,10 +492,13 @@ function loadState(){
 
 (function(){
   let h='';
+  const rnd=(a,b)=>(Math.random()*(b-a)+a).toFixed(1);
   for(let i=0;i<26;i++){
     const s=16+Math.random()*12, x=6+Math.random()*88, y=18+Math.random()*74;
     h+=`<i style="width:${s}px;height:${s}px;left:${x}%;top:${y}%;background:${COLORS[i%COLORS.length]};
-        --jx:${(Math.random()*10-5).toFixed(1)}px;--jy:${(Math.random()*10-5).toFixed(1)}px"></i>`;
+        --jx:${rnd(-26,26)}px;--jy:${rnd(-24,24)}px;
+        --jx2:${rnd(-28,28)}px;--jy2:${rnd(-26,26)}px;
+        --jd:${rnd(0,.3)}s"></i>`;
   }
   $('balls').innerHTML=h;
 })();
@@ -805,6 +818,7 @@ function drawOne(){
           groups[gi].push(person); paintCard(gi,true);
           if(groups[gi].length>=plan.sizes[gi]&&!plan.single&&cursor<plan.total) sndGroupDone();
           busy=false; mzone.classList.remove('busy');
+          fitMachine();   /* 姓名長度不同會改變卡片高度，重新校正避免重疊 */
           if(cursor>=plan.total){ sndFinish(); setHint('全部抽完囉！🎉 按「重新開始」再玩一次。',false); }
           else updateHint();
         });
@@ -980,19 +994,31 @@ function fitMachine(){
   const natH=mzone.offsetHeight, natW=machine.offsetWidth;
   if(!natH||!natW) return;
   const focus=document.body.classList.contains('focusmode');
-  const wide=window.innerWidth>=800;          /* 左右並排時，姓名不佔垂直空間 */
-  /* 預留給提示、姓名牌、卡片邊距的高度 */
-  const reserve = wide ? (focus?120:170) : (focus?250:300);
-  const availH=Math.max(240,window.innerHeight-reserve);
-  const stageW=($('panelStage').clientWidth||window.innerWidth)-36;
-  const availW=Math.max(180, wide?stageW*0.46:stageW);
+  const stage=$('panelStage');
+  /* 直接讀目前是左右並排還是上下堆疊，不用猜寬度 */
+  const row=getComputedStyle(stage).flexDirection==='row';
+  /* 量出提示標籤與右欄（姓名牌等）實際佔掉的高度 */
+  const hint=$('tapHint');
+  const hintH=(hint&&hint.offsetParent)?hint.offsetHeight+10:0;
+  const rcol=$('rcol');
+  const rcolH=(rcol&&rcol.offsetParent)?rcol.offsetHeight+16:0;
+  const pad=row?(focus?112:125):(focus?104:95);   /* 卡片內距、外距與呼吸空間 */
+  const availH=row
+    ? Math.max(220, window.innerHeight-hintH-pad)
+    : Math.max(180, window.innerHeight-hintH-rcolH-pad);
+  const stageW=(stage.clientWidth||window.innerWidth)-36;
+  const availW=Math.max(170, row?stageW*0.5:stageW);
   let mz=Math.min(availH/natH, availW/natW);
-  const lo=focus?1.6:1.5, hi=focus?3.2:2.8;
-  mz=Math.max(lo,Math.min(hi,mz));
+  /* 下限放寬到 1.15：寧可小一點，也不要蓋到姓名 */
+  mz=Math.max(1.15, Math.min(focus?3.2:2.8, mz));
   mzone.style.setProperty('--mz',mz.toFixed(3));
-  mzone.style.transform='scale('+mz.toFixed(3)+')';   /* 直接設定，避免 var() 更新不即時 */
+  mzone.style.transform='scale('+mz.toFixed(3)+')';
   mzone.style.marginTop=Math.round(26*mz)+'px';
-  mzone.style.marginBottom=Math.round(natH*(mz-1)+12)+'px';
+  mzone.style.marginBottom=Math.round(natH*(mz-1)+14)+'px';
+  /* transform-origin 是 top center，水平方向左右各撐開一半，要一併補上，
+     否則放大後的機身會蓋到旁邊的姓名牌 */
+  const side=Math.round(natW*(mz-1)/2)+'px';
+  mzone.style.marginLeft=side; mzone.style.marginRight=side;
 }
 window.addEventListener('resize',fitMachine);
 
