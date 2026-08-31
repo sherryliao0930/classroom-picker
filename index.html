@@ -261,6 +261,9 @@
       <button class="btn ghost" id="rename">🎲 換一批隊名</button>
       <button class="btn ghost" id="sound">🔊 音效：開</button>
     </div>
+    <div class="btnrow" style="grid-template-columns:1fr">
+      <button class="btn ghost" id="testSound">🔔 測試音效（平板聽不到請按這裡）</button>
+    </div>
 
     <div class="row" style="margin-top:16px">
       <label class="lab">學生名單（一行一位）</label>
@@ -355,6 +358,7 @@ const COLORS=['#ff9fb2','#ffe08a','#9fe0d0','#a8d8ff','#c9b6ff','#ffc59f','#b8e9
 /* ===================== 狀態 ===================== */
 let mode='single', repeat=false, soundOn=true, theme='animal';
 let roster=[], pool=[], groups=[], teams=[], cursor=0, plan={}, busy=false, history=[], autoTimer=null;
+let audioChecked=false;
 const $=id=>document.getElementById(id);
 const machine=$('machine'), cap=$('cap'), lastCard=$('lastCard');
 
@@ -415,18 +419,54 @@ function loadState(){
   $('balls').innerHTML=h;
 })();
 
-/* ===================== 音效 ===================== */
+/* ===================== 音效 =====================
+   iPad / iPhone 有兩道關卡，兩道都要過才聽得到聲音：
+   ① 音訊必須由使用者的觸控啟動（不能自動播放）
+   ② 側邊靜音開關／控制中心的靜音，預設會把網頁音訊整個切掉
+   ②的解法是 navigator.audioSession（Safari 16.4+），告訴系統這是「播放」用途。 */
 let ac=null, noiseBuf=null;
+
+function initAudio(){
+  if(ac) return ac;
+  try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  noiseBuf=ac.createBuffer(1, Math.floor(ac.sampleRate*0.4), ac.sampleRate);
+  const d=noiseBuf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  return ac;
+}
+
+/* 在使用者第一次碰畫面時解鎖音訊 */
+let unlocked=false;
+function unlockAudio(){
+  /* 讓 iOS 即使在靜音模式也播得出來 */
+  try{ if(navigator.audioSession) navigator.audioSession.type='playback'; }catch(e){}
+  const a=initAudio(); if(!a) return;
+  if(a.state==='suspended') a.resume();
+  if(!unlocked){
+    /* 播一段 1 sample 的無聲音訊，這是 iOS 真正解鎖的關鍵動作 */
+    try{
+      const s=a.createBufferSource();
+      s.buffer=a.createBuffer(1,1,a.sampleRate);
+      s.connect(a.destination); s.start(0);
+      unlocked=true;
+    }catch(e){}
+  }
+}
+['pointerdown','touchend','click','keydown'].forEach(ev=>
+  document.addEventListener(ev,unlockAudio,{passive:true}));
+
 function audio(){
   if(!soundOn) return null;
-  if(!ac){
-    try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
-    noiseBuf=ac.createBuffer(1, Math.floor(ac.sampleRate*0.4), ac.sampleRate);
-    const d=noiseBuf.getChannelData(0);
-    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  const a=ac||initAudio(); if(!a) return null;
+  if(a.state==='suspended') a.resume();
+  return a;
+}
+/* 聽不到聲音時給老師看得懂的提示 */
+function checkAudio(){
+  if(!soundOn) return;
+  if(!ac || ac.state!=='running'){
+    setHint('🔇 這台裝置擋住了音效。請把側邊靜音開關關掉（或從控制中心解除靜音），再按一次「🔊 測試音效」。',true);
   }
-  if(ac.state==='suspended') ac.resume();
-  return ac;
 }
 function tone(freq,dur,type,vol,delay,glideTo){
   const a=audio(); if(!a) return;
@@ -610,6 +650,8 @@ function drawOne(){
   cursor++; busy=true;
 
   machine.className='machine shake turn'; sndCrank(); updatePool();
+  /* 第一次轉的時候順便確認音訊有沒有被裝置擋掉 */
+  if(!audioChecked){ audioChecked=true; setTimeout(checkAudio,600); }
 
   setTimeout(()=>{
     machine.className='machine';
@@ -807,7 +849,26 @@ $('rename').onclick=()=>{
   });
   tone(880,.12,'triangle',.15,0); tone(1175,.14,'triangle',.13,.09);
 };
-$('sound').onclick=e=>{ soundOn=!soundOn; e.target.textContent=soundOn?'🔊 音效：開':'🔇 音效：關'; if(soundOn) tone(880,.12,'triangle',.15,0); saveState(); };
+$('sound').onclick=e=>{
+  soundOn=!soundOn;
+  e.target.textContent=soundOn?'🔊 音效：開':'🔇 音效：關';
+  if(soundOn){ unlockAudio(); tone(880,.12,'triangle',.15,0); setTimeout(checkAudio,300); }
+  saveState();
+};
+$('testSound').onclick=()=>{
+  if(!soundOn){ soundOn=true; $('sound').textContent='🔊 音效：開'; saveState(); }
+  unlockAudio();
+  /* 播一段明顯的上行音階，方便判斷是不是真的有聲音 */
+  [523,659,784,1047].forEach((f,i)=>tone(f,.22,'triangle',.18,i*.13));
+  click(.55,.3,1800);
+  setTimeout(()=>{
+    if(ac&&ac.state==='running'){
+      setHint('🔔 剛剛有播出一段「Do Mi Sol Do」的音階。如果還是沒聽到，請檢查平板的靜音開關和音量。',false);
+    }else{
+      checkAudio();
+    }
+  },400);
+};
 $('copy').onclick=()=>{
   const txt=resultText();
   if(!txt){ setHint('還沒有分組結果可以複製喔！',true); return; }
