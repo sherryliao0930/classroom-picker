@@ -32,26 +32,44 @@
   h1{text-align:center;margin:0 0 4px;font-size:clamp(22px,5vw,36px);color:var(--pink-d);
      text-shadow:2px 3px 0 #fff,4px 6px 0 rgba(150,25,65,.3);letter-spacing:1px}
   .sub{text-align:center;color:var(--ink-l);margin:0 0 18px;font-size:13px}
-  .wrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+  .wrap{max-width:1260px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  /* 上排工具列：欄位自動換行，不夠寬就往下排 */
+  .toolbar .tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
+  .toolbar .tcell{min-width:0}
+  .toolbar .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .toolbar .two .btn.ghost{padding:10px 4px;font-size:13px}
+  .toolbar .hint{margin-top:12px}
+  /* 下方：名單 + 分組結果 */
+  .bottom{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start}
+  @media(max-width:900px){.bottom{grid-template-columns:1fr}}
   .card{background:var(--cream);border:3px solid #fff;border-radius:24px;
         box-shadow:0 8px 0 rgba(150,110,70,.35),0 14px 26px rgba(120,80,50,.2);padding:16px}
   .card h2{margin:0 0 12px;font-size:16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
   .card h2 small{font-weight:400;font-size:11px;color:var(--ink-l)}
 
   /* ============ 扭蛋機 ============ */
-  .stage{display:flex;flex-direction:column;align-items:center}
+  .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 16px 22px;gap:10px}
+  .mcol{display:flex;flex-direction:column;align-items:center}
+  .rcol{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;min-width:0}
+  .stage #go{max-width:340px;width:100%}
+  /* 螢幕夠寬時左右並排：機器可以放很大，姓名同時看得見 */
+  @media(min-width:800px){
+    .stage{flex-direction:row;align-items:center;gap:34px}
+    .mcol{flex:0 0 auto}
+    .rcol{flex:1 1 420px;max-width:560px}
+  }
   /* 整台機器放大成一顆大按鈕。連落蛋區一起縮放，扭蛋才會對準出口。
      --mz 是放大倍率，下面用 padding-bottom 補回放大後多出來的高度。 */
   .mzone{
-    --mz:1.42;
-    margin-top:36px;                 /* 耳朵放大後會往上突出，留空間 */
+    --mz:1.85;
+    margin-top:46px;                 /* 耳朵放大後會往上突出，留空間 */
     transform:scale(var(--mz)); transform-origin:top center;
     cursor:pointer; user-select:none; -webkit-user-select:none;
     transition:filter .15s, transform .15s;
     border-radius:26px;
   }
   .mzone:hover{filter:brightness(1.04) saturate(1.05)}
-  .mzone:active{transform:scale(calc(var(--mz) * .97))}
+  .mzone:active{filter:brightness(.93) saturate(1.1)}
   .mzone:focus-visible{outline:4px solid var(--pink-d);outline-offset:6px}
   .mzone.busy{cursor:progress}
   /* 佔位：撐出放大後真正需要的高度（在 JS 啟動時依實際量測校正） */
@@ -106,22 +124,26 @@
 
   /* ============ 名牌：完整顯示，不截字 ============ */
   .lastcard{
-    width:min(340px,100%); margin-top:-2px; background:#fff;
-    border:4px solid var(--lemon); border-radius:22px; padding:12px 16px;
-    display:flex; align-items:center; gap:13px; box-shadow:0 6px 0 rgba(150,110,70,.4);
+    width:auto; max-width:min(680px,100%); margin-top:2px; background:#fff;
+    border:4px solid var(--lemon); border-radius:24px; padding:14px 30px;
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    text-align:center; box-shadow:0 6px 0 rgba(150,110,70,.4);
   }
+  .lc-main{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+  .lc-meta{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .lc-meta:empty{display:none}
   .lastcard.idle{opacity:.55;border-color:var(--line)}
   .lastcard.pop{animation:cardPop .6s cubic-bezier(.34,1.8,.5,1)}
   @keyframes cardPop{0%{transform:scale(.3) rotate(-12deg)}60%{transform:scale(1.12) rotate(4deg)}100%{transform:scale(1)}}
-  .lc-emo{font-size:44px;line-height:1;flex:0 0 auto}
-  .lc-txt{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
-  .lc-no{font-size:12px;color:var(--ink-l)}
+  .lc-emo{font-size:clamp(46px,9vw,68px);line-height:1;flex:0 0 auto}
+  .lc-no{font-size:15px;font-weight:600;color:var(--ink-l)}
+  .lc-no:empty{display:none}
   /* 完整呈現：可換行、不省略、字太長自動縮 */
-  .lc-nm{font-size:clamp(20px,4.6vw,28px);font-weight:700;line-height:1.2;
-         white-space:normal;overflow-wrap:anywhere;word-break:break-word;width:100%}
-  .lc-nm.long{font-size:clamp(17px,3.8vw,22px)}
-  .lc-team{font-size:12px;color:#fff;background:var(--pink);padding:4px 10px;border-radius:12px;
-           max-width:100%;overflow-wrap:anywhere}
+  .lc-nm{font-size:clamp(34px,7.4vw,54px);font-weight:800;line-height:1.15;letter-spacing:2px;
+         white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  .lc-nm.long{font-size:clamp(26px,5.6vw,42px);letter-spacing:1px}
+  .lc-team{font-size:15px;font-weight:700;color:#fff;background:var(--pink);padding:5px 14px;
+           border-radius:14px;max-width:100%;overflow-wrap:anywhere}
   .lc-team:empty{display:none}
   .flycard{pointer-events:none;box-shadow:0 10px 24px rgba(160,120,100,.3)}
   .hist{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-top:11px;max-width:360px}
@@ -194,29 +216,29 @@
   @media(max-width:900px){
     body{padding-left:10px;padding-right:10px}
     .wrap{grid-template-columns:1fr;gap:16px}
-    #panelStage{order:1} #panelResult{order:2} #panelSettings{order:3}
     #bar{display:flex}
     .groups{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
     .hist{max-width:100%}
   }
   @media(max-width:420px){
-    .mzone{--mz:1.22;margin-top:28px}
+    .mzone{--mz:1.34;margin-top:32px}
     .groups{grid-template-columns:1fr}
-    body.focusmode .mzone{--mz:1.45;margin-top:36px}
+    body.focusmode .mzone{--mz:1.62;margin-top:42px}
   }
 
   /* ============ 上課模式（投影 / 載具全螢幕） ============ */
   body.focusmode{padding-bottom:calc(96px + var(--safe-b))}
   body.focusmode h1,body.focusmode .sub{display:none}
-  body.focusmode #panelSettings,body.focusmode #panelResult,body.focusmode .hist{display:none}
+  body.focusmode #panelSettings,body.focusmode .bottom,body.focusmode .hist,body.focusmode #go{display:none}
   body.focusmode .wrap{grid-template-columns:1fr;max-width:760px}
-  body.focusmode .mzone{--mz:1.85;margin-top:52px}
-  body.focusmode .lastcard{width:min(620px,100%);padding:22px 26px;gap:20px;border-width:6px}
-  body.focusmode .lc-emo{font-size:clamp(60px,14vw,96px)}
-  body.focusmode .lc-no{font-size:clamp(14px,3vw,20px)}
-  body.focusmode .lc-nm{font-size:clamp(34px,9vw,64px)}
-  body.focusmode .lc-nm.long{font-size:clamp(26px,7vw,48px)}
-  body.focusmode .lc-team{font-size:clamp(14px,3.2vw,22px);padding:6px 16px}
+  body.focusmode .mzone{--mz:2.35;margin-top:66px}
+  body.focusmode .lastcard{max-width:min(900px,100%);padding:26px 44px;gap:10px;border-width:6px}
+  body.focusmode .lc-main{gap:26px}
+  body.focusmode .lc-emo{font-size:clamp(72px,13vw,124px)}
+  body.focusmode .lc-no{font-size:clamp(18px,3vw,26px)}
+  body.focusmode .lc-nm{font-size:clamp(52px,11vw,104px);letter-spacing:4px}
+  body.focusmode .lc-nm.long{font-size:clamp(40px,8.4vw,78px);letter-spacing:2px}
+  body.focusmode .lc-team{font-size:clamp(17px,3.2vw,26px);padding:8px 22px}
   body.focusmode .pool{font-size:15px;margin-top:16px}
   body.focusmode #bar{display:flex}
 </style>
@@ -230,97 +252,82 @@
 
 <div class="wrap">
 
-  <!-- ===== 設定 ===== -->
-  <section class="card" id="panelSettings">
-    <h2>🎛️ 分組設定</h2>
+  <!-- ===== 上排：分組設定工具列 ===== -->
+  <section class="card toolbar" id="panelSettings">
+    <div class="tgrid">
+      <div class="tcell">
+        <label class="lab">要怎麼抽？</label>
+        <div class="seg" id="segMode">
+          <button data-v="single" class="on">🎯 單抽</button>
+          <button data-v="group">👥 分組</button>
+        </div>
+      </div>
 
-    <div class="row">
-      <label class="lab">要怎麼抽？</label>
-      <div class="seg" id="segMode">
-        <button data-v="single" class="on">🎯 單抽一人</button>
-        <button data-v="group">👥 分組</button>
+      <div class="tcell">
+        <label class="lab">可以重複抽到嗎？</label>
+        <div class="seg" id="segRep">
+          <button data-v="no" class="on">🚫 不重複</button>
+          <button data-v="yes">🔁 可重複</button>
+        </div>
+      </div>
+
+      <div class="tcell" id="grpRow" style="display:none">
+        <label class="lab">分幾組 ／ 每組幾人</label>
+        <div class="two">
+          <input type="number" id="nGroups" min="1" max="20" value="5" inputmode="numeric" placeholder="組數">
+          <input type="number" id="nPer" min="1" max="40" inputmode="numeric" placeholder="每組人數">
+        </div>
+      </div>
+
+      <div class="tcell" id="themeRow" style="display:none">
+        <label class="lab">隊名主題</label>
+        <select id="theme">
+          <option value="animal">🐾 可愛動物</option>
+          <option value="fruit">🍓 水果家族</option>
+          <option value="space">🚀 星際探險</option>
+          <option value="color">🌈 彩虹顏色</option>
+          <option value="sport">⚽ 運動大隊</option>
+          <option value="custom">✏️ 自己輸入</option>
+        </select>
+      </div>
+
+      <div class="tcell">
+        <label class="lab">音效風格（點一下試聽）</label>
+        <div class="seg" id="segSnd">
+          <button data-v="lively" class="on">🥁 熱鬧</button>
+          <button data-v="soft">🎹 輕柔</button>
+          <button data-v="retro">🎮 電玩</button>
+        </div>
+      </div>
+
+      <div class="tcell">
+        <label class="lab">其他操作</label>
+        <div class="two">
+          <button class="btn ghost" id="auto">⚡ 一次抽完</button>
+          <button class="btn ghost" id="reset">🔄 重新開始</button>
+        </div>
+      </div>
+
+      <div class="tcell">
+        <label class="lab">隊名與音效</label>
+        <div class="two">
+          <button class="btn ghost" id="rename">🎲 換隊名</button>
+          <button class="btn ghost" id="sound">🔊 音效：開</button>
+        </div>
       </div>
     </div>
 
-    <div class="row">
-      <label class="lab">抽過的人還能再被抽到嗎？</label>
-      <div class="seg" id="segRep">
-        <button data-v="no" class="on">🚫 不重複</button>
-        <button data-v="yes">🔁 可重複</button>
-      </div>
+    <div id="customRow" style="display:none;margin-top:10px">
+      <label class="lab">自訂隊名（一行一組，前面可加 emoji）</label>
+      <textarea id="customTeams" class="small" placeholder="🍀 幸運草隊&#10;🔥 火焰隊&#10;第三小隊"></textarea>
     </div>
 
-    <div class="row" id="grpRow" style="display:none">
-      <label class="lab">分幾組 ／ 每組幾人</label>
-      <div class="two">
-        <input type="number" id="nGroups" min="1" max="20" value="5" inputmode="numeric" placeholder="組數">
-        <input type="number" id="nPer" min="1" max="40" inputmode="numeric" placeholder="每組人數（可留空）">
-      </div>
-    </div>
-
-    <div class="row" id="themeRow" style="display:none">
-      <label class="lab">隊名主題</label>
-      <select id="theme">
-        <option value="animal">🐾 可愛動物</option>
-        <option value="fruit">🍓 水果家族</option>
-        <option value="space">🚀 星際探險</option>
-        <option value="color">🌈 彩虹顏色</option>
-        <option value="sport">⚽ 運動大隊</option>
-        <option value="custom">✏️ 自己輸入</option>
-      </select>
-      <div id="customRow" style="display:none;margin-top:9px">
-        <label class="lab">自訂隊名（一行一組，可在最前面加 emoji）</label>
-        <textarea id="customTeams" class="small" placeholder="🍀 幸運草隊&#10;🔥 火焰隊&#10;第三小隊"></textarea>
-      </div>
-    </div>
-
-    <div class="row"><div class="hint" id="hint">先選好設定，再按下面的把手！</div></div>
-
-    <button class="btn" id="go">🥚 轉一下！</button>
-    <div class="btnrow">
-      <button class="btn ghost" id="auto">⚡ 一次抽完</button>
-      <button class="btn ghost" id="reset">🔄 重新開始</button>
-    </div>
-    <div class="btnrow">
-      <button class="btn ghost" id="rename">🎲 換一批隊名</button>
-      <button class="btn ghost" id="sound">🔊 音效：開</button>
-    </div>
-    <div class="row" style="margin-top:12px">
-      <label class="lab">音效風格（點一下就試聽）</label>
-      <div class="seg" id="segSnd">
-        <button data-v="lively" class="on">🥁 熱鬧</button>
-        <button data-v="soft">🎹 輕柔</button>
-        <button data-v="retro">🎮 電玩</button>
-      </div>
-    </div>
-    <div class="btnrow" style="grid-template-columns:1fr">
-      <button class="btn ghost" id="testSound">🔔 測試音效（平板聽不到請按這裡）</button>
-    </div>
-
-    <div class="row" style="margin-top:16px">
-      <label class="lab">學生名單（一行一位）</label>
-      <textarea id="roster" placeholder="把班級名單貼進來，一行一位：&#10;&#10;1 王小明&#10;2 陳小華&#10;3 林小美&#10;&#10;（號碼可省略，直接打名字也可以）"></textarea>
-      <div class="saverow">
-        <span id="saveState">🔒 名單只存在這台裝置，不會上傳</span>
-        <button class="btn ghost mini" id="clearRoster">🗑️ 清除</button>
-      </div>
-    </div>
-
-    <div class="row">
-      <label class="lab">下載分組結果</label>
-      <div class="btnrow" style="margin-top:0">
-        <button class="btn ghost" id="dlPng">🖼️ 下載圖片</button>
-        <button class="btn ghost" id="dlTxt">📄 下載文字檔</button>
-      </div>
-      <div class="btnrow" style="grid-template-columns:1fr">
-        <button class="btn ghost" id="copy">📋 複製到剪貼簿</button>
-      </div>
-    </div>
+    <div class="hint" id="hint">先選好設定，再點中間的扭蛋機！</div>
   </section>
 
-  <!-- ===== 扭蛋機 ===== -->
+  <!-- ===== 中央主角：扭蛋機 ===== -->
   <section class="card stage" id="panelStage">
-    <!-- 整台機器就是一顆大按鈕，點下去直接抽 -->
+    <div class="mcol">
     <div class="mzone" id="mzone" role="button" tabindex="0" aria-label="點一下扭蛋機開始抽籤">
       <div class="machine" id="machine">
         <i class="ear l"></i><i class="ear r"></i>
@@ -339,26 +346,52 @@
       </div></div>
     </div>
 
-    <div class="taphint" id="tapHint">👆 點扭蛋機就可以抽籤</div>
-
-    <div class="lastcard idle" id="lastCard">
-      <div class="lc-emo">🥚</div>
-      <div class="lc-txt">
-        <span class="lc-no"></span>
-        <span class="lc-nm">還沒開始</span>
-        <span class="lc-team"></span>
-      </div>
+      <div class="taphint" id="tapHint">👆 點扭蛋機就可以抽籤</div>
     </div>
 
-    <div class="hist" id="hist"></div>
-    <div class="pool" id="pool"></div>
+    <!-- 右欄：抽出來的人（大字置中）-->
+    <div class="rcol">
+      <div class="lastcard idle" id="lastCard">
+        <div class="lc-main">
+          <span class="lc-emo">🥚</span>
+          <span class="lc-nm">還沒開始</span>
+        </div>
+        <div class="lc-meta"><span class="lc-no"></span><span class="lc-team"></span></div>
+      </div>
+      <button class="btn" id="go">🥚 轉一下！</button>
+      <div class="pool" id="pool"></div>
+      <div class="hist" id="hist"></div>
+    </div>
   </section>
 
-  <!-- ===== 結果 ===== -->
-  <section class="card" id="panelResult">
-    <h2>🏆 分組結果 <small>（隊名可直接點下去改）</small></h2>
-    <div id="result"><div class="empty">還沒有人被抽出來 🥚<br>快去轉扭蛋機吧！</div></div>
-  </section>
+  <!-- ===== 下方：名單 ＋ 分組結果 ===== -->
+  <div class="bottom">
+    <section class="card" id="panelRoster">
+      <h2>📋 學生名單 <small>（一行一位）</small></h2>
+      <textarea id="roster" placeholder="把班級名單貼進來，一行一位：&#10;&#10;1 王小明&#10;2 陳小華&#10;3 林小美&#10;&#10;（號碼可省略，直接打名字也可以）"></textarea>
+      <div class="saverow">
+        <span id="saveState">🔒 名單只存在這台裝置，不會上傳</span>
+        <button class="btn ghost mini" id="clearRoster">🗑️ 清除</button>
+      </div>
+
+      <label class="lab" style="margin-top:16px">下載分組結果</label>
+      <div class="btnrow" style="margin-top:0">
+        <button class="btn ghost" id="dlPng">🖼️ 下載圖片</button>
+        <button class="btn ghost" id="dlTxt">📄 下載文字檔</button>
+      </div>
+      <div class="btnrow" style="grid-template-columns:1fr">
+        <button class="btn ghost" id="copy">📋 複製到剪貼簿</button>
+      </div>
+      <div class="btnrow" style="grid-template-columns:1fr">
+        <button class="btn ghost" id="testSound">🔔 測試音效（平板聽不到請按這裡）</button>
+      </div>
+    </section>
+
+    <section class="card" id="panelResult">
+      <h2>🏆 分組結果 <small>（隊名可直接點下去改）</small></h2>
+      <div id="result"><div class="empty">還沒有人被抽出來 🥚<br>快去點扭蛋機吧！</div></div>
+    </section>
+  </div>
 </div>
 
 <div id="bar">
@@ -658,7 +691,7 @@ function newRound(silent){
   groups=p.sizes.map(()=>[]);
   teams=rollTeams(p.sizes.length,true);
   pool=repeat?roster.slice():shuffle(roster);
-  $('result').innerHTML='<div class="empty">還沒有人被抽出來 🥚<br>快去轉扭蛋機吧！</div>';
+  $('result').innerHTML='<div class="empty">還沒有人被抽出來 🥚<br>快去點扭蛋機吧！</div>';
   if(!silent){
     cap.className='capsule';
     lastCard.className='lastcard idle';
@@ -940,12 +973,26 @@ mzone.addEventListener('keydown',e=>{
   if(e.key==='Enter'||e.key===' '){ e.preventDefault(); if(!busy) drawOne(); }
 });
 
-/* 放大後要補回多出來的高度，否則會蓋到下面的名牌 */
+/* 依螢幕大小自動決定扭蛋機的放大倍率。
+   目標：機器盡量大，但要讓「機器 + 姓名牌」同時看得見，不用捲動。
+   offsetHeight 不受 transform 影響，所以量到的一定是原始尺寸。 */
 function fitMachine(){
-  mzone.style.marginBottom='0px';
-  const h=mzone.offsetHeight;
-  const mz=parseFloat(getComputedStyle(mzone).getPropertyValue('--mz'))||1;
-  mzone.style.marginBottom=(Math.round(h*(mz-1))+12)+'px';   /* +12 留一點呼吸空間 */
+  const natH=mzone.offsetHeight, natW=machine.offsetWidth;
+  if(!natH||!natW) return;
+  const focus=document.body.classList.contains('focusmode');
+  const wide=window.innerWidth>=800;          /* 左右並排時，姓名不佔垂直空間 */
+  /* 預留給提示、姓名牌、卡片邊距的高度 */
+  const reserve = wide ? (focus?120:170) : (focus?250:300);
+  const availH=Math.max(240,window.innerHeight-reserve);
+  const stageW=($('panelStage').clientWidth||window.innerWidth)-36;
+  const availW=Math.max(180, wide?stageW*0.46:stageW);
+  let mz=Math.min(availH/natH, availW/natW);
+  const lo=focus?1.6:1.5, hi=focus?3.2:2.8;
+  mz=Math.max(lo,Math.min(hi,mz));
+  mzone.style.setProperty('--mz',mz.toFixed(3));
+  mzone.style.transform='scale('+mz.toFixed(3)+')';   /* 直接設定，避免 var() 更新不即時 */
+  mzone.style.marginTop=Math.round(26*mz)+'px';
+  mzone.style.marginBottom=Math.round(natH*(mz-1)+12)+'px';
 }
 window.addEventListener('resize',fitMachine);
 
@@ -1020,7 +1067,7 @@ if(restored){
   $('saveState').textContent=`🔒 已記住 ${n} 位學生，只存在這台裝置`;
   updateHint();
 }else{
-  setHint('👋 先把班級名單貼到「學生名單」框裡，貼一次就會記住，下次打開自動帶入！',false);
+  setHint('👋 先把班級名單貼到下方的「學生名單」框裡，貼一次就會記住，下次打開自動帶入！',false);
 }
 </script>
 </body>
