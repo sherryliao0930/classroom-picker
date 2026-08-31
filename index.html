@@ -87,7 +87,6 @@
   .dome{position:relative;width:206px;height:160px;border-radius:110px 110px 24px 24px;
     background:linear-gradient(160deg,rgba(255,255,255,.9),rgba(138,197,238,.85));
     border:5px solid #fff;box-shadow:inset 0 -14px 22px rgba(60,130,180,.4);overflow:hidden;z-index:1}
-  .dome .shine{position:absolute;top:20px;left:26px;width:34px;height:54px;background:rgba(255,255,255,.85);border-radius:50%;transform:rotate(-22deg)}
   .balls{position:absolute;inset:0}
   .balls i{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.85)}
   .machine.shake .balls i{animation:jig .26s infinite cubic-bezier(.4,0,.6,1);animation-delay:var(--jd)}
@@ -100,9 +99,33 @@
   }
   .mbody{position:relative;width:192px;margin:-6px auto 0;height:118px;
     background:linear-gradient(180deg,var(--pink),var(--pink-d));border:5px solid #fff;border-radius:20px;z-index:2}
-  .face{position:absolute;top:12px;left:0;right:0;text-align:center;font-size:14px;color:#fff;letter-spacing:8px;opacity:.9}
-  .cheek{position:absolute;top:18px;width:13px;height:8px;background:#ffb3c4;border-radius:50%;opacity:.85}
-  .cheek.l{left:44px} .cheek.r{right:44px}
+  /* 一雙會動的眼睛：平常慢慢看來看去並眨眼，抽籤時跟著扭蛋轉圈 */
+  .eyes{position:absolute;top:12px;left:0;right:0;display:flex;justify-content:center;gap:24px}
+  .eye{position:relative;width:32px;height:32px;border-radius:50%;background:#fff;
+       border:3px solid rgba(60,25,35,.18);overflow:hidden;animation:blink 4.6s infinite}
+  .eye i{position:absolute;left:50%;top:50%;width:15px;height:15px;margin:-7.5px 0 0 -7.5px;
+         border-radius:50%;background:#3b2318;animation:lookIdle 6.5s ease-in-out infinite}
+  .eye i::after{content:"";position:absolute;top:2px;left:3px;width:5px;height:5px;
+                border-radius:50%;background:rgba(255,255,255,.92)}
+  @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+  @keyframes lookIdle{
+    0%,18%  {transform:translate(0,0)}
+    28%,42% {transform:translate(-6px,2px)}
+    52%,66% {transform:translate(6px,2px)}
+    76%,88% {transform:translate(0,-4px)}
+    100%    {transform:translate(0,0)}
+  }
+  /* 抽籤時眼睛跟著裡面的扭蛋一起轉 */
+  .machine.shake .eye i{animation:lookSpin .42s linear infinite}
+  @keyframes lookSpin{
+    0%  {transform:translate(0,-7px)}
+    25% {transform:translate(7px,0)}
+    50% {transform:translate(0,7px)}
+    75% {transform:translate(-7px,0)}
+    100%{transform:translate(0,-7px)}
+  }
+  .cheek{position:absolute;top:28px;width:17px;height:10px;background:#ffb3c4;border-radius:50%;opacity:.9}
+  .cheek.l{left:16px} .cheek.r{right:16px}
   .knob{position:absolute;left:20px;bottom:18px;width:46px;height:46px;border-radius:50%;
     background:radial-gradient(circle at 34% 30%,#fff,#ffe08a 60%,#f2c14e);border:4px solid #fff;display:grid;place-items:center}
   .knob b{width:6px;height:26px;background:#fff;border-radius:4px;transition:transform .95s cubic-bezier(.5,-.3,.3,1.4)}
@@ -342,9 +365,9 @@
     <div class="mzone" id="mzone" role="button" tabindex="0" aria-label="點一下扭蛋機開始抽籤">
       <div class="machine" id="machine">
         <i class="ear l"></i><i class="ear r"></i>
-        <div class="dome"><div class="balls" id="balls"></div><div class="shine"></div></div>
+        <div class="dome"><div class="balls" id="balls"></div></div>
         <div class="mbody">
-          <div class="face">◕&nbsp;&nbsp;◕</div>
+          <div class="eyes"><span class="eye"><i></i></span><span class="eye"><i></i></span></div>
           <i class="cheek l"></i><i class="cheek r"></i>
           <div class="knob"><b></b></div>
           <div class="slot"></div>
