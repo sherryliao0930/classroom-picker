@@ -18,7 +18,7 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{-webkit-text-size-adjust:100%}
   body{
-    margin:0; padding:20px 14px calc(96px + var(--safe-b));
+    margin:0; padding:20px 14px 34px;
     font-family:"Chalkboard SE","Comic Sans MS","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
     color:var(--ink); min-height:100vh;
     background:
@@ -51,7 +51,6 @@
   .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 16px 22px;gap:10px}
   .mcol{display:flex;flex-direction:column;align-items:center}
   .rcol{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;min-width:0}
-  .stage #go{max-width:340px;width:100%}
   /* 螢幕夠寬時左右並排：機器可以放很大，姓名同時看得見 */
   @media(min-width:800px){
     .stage{flex-direction:row;align-items:center;gap:34px}
@@ -213,20 +212,16 @@
   .empty{color:var(--ink-l);font-size:14px;text-align:center;padding:30px 10px;line-height:1.8}
 
   /* ============ 行動裝置 / iPad ============ */
-  #bar{position:fixed;left:0;right:0;bottom:0;z-index:500;display:none;
-       padding:9px 12px calc(9px + var(--safe-b));gap:9px;
-       background:rgba(255,248,239,.94);backdrop-filter:blur(10px);border-top:3px solid #fff;
-       box-shadow:0 -6px 20px rgba(160,120,100,.14)}
-  #bar .btn{margin:0}
-  #bar .btn.ghost{flex:0 0 96px}
-  #modeBtn{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:600;
-    border:3px solid #fff;background:#fff;color:var(--ink-l);font:inherit;font-size:13px;
-    padding:9px 13px;border-radius:16px;box-shadow:0 4px 0 rgba(150,110,70,.45);cursor:pointer;min-height:42px}
+  .topctl{position:fixed;right:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:600;
+    display:flex;gap:8px}
+  .tbtn{border:3px solid #fff;background:#fff;color:var(--ink-l);font:inherit;font-size:13px;
+    padding:9px 13px;border-radius:16px;box-shadow:0 4px 0 rgba(150,110,70,.45);cursor:pointer;
+    min-height:42px;transition:opacity .2s}
+  #autoTop{display:none}
 
   @media(max-width:900px){
     body{padding-left:10px;padding-right:10px}
     .wrap{grid-template-columns:1fr;gap:16px}
-    #bar{display:flex}
     .groups{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
     .hist{max-width:100%}
   }
@@ -237,10 +232,21 @@
   }
 
   /* ============ 上課模式（投影 / 載具全螢幕） ============ */
-  body.focusmode{padding-bottom:calc(96px + var(--safe-b))}
+  html.focusmode,body.focusmode{overflow:hidden;height:100%}  /* 蛋殼飛出畫面時不要產生捲軸 */
+  body.focusmode{padding:0}
+  /* 滿版：卡片外框全部拿掉，讓扭蛋機直接站在背景上 */
+  body.focusmode #panelStage{
+    background:transparent;border:none;box-shadow:none;border-radius:0;
+    min-height:100vh;min-height:100dvh;padding:8px 16px;justify-content:center;
+  }
+  /* 上課模式：機器與姓名牌整組置中，不讓右欄把空間吃光 */
+  body.focusmode .rcol{flex:0 0 min(46vw,520px);max-width:none}
+  body.focusmode .topctl .tbtn{opacity:.55}
+  body.focusmode .topctl:hover .tbtn{opacity:1}
+  body.focusmode #autoTop{display:inline-block}
   body.focusmode h1,body.focusmode .sub{display:none}
-  body.focusmode #panelSettings,body.focusmode .bottom,body.focusmode .hist,body.focusmode #go{display:none}
-  body.focusmode .wrap{grid-template-columns:1fr;max-width:760px}
+  body.focusmode #panelSettings,body.focusmode .bottom,body.focusmode .hist{display:none}
+  body.focusmode .wrap{max-width:none;gap:0;min-height:100vh;min-height:100dvh;justify-content:center}
   body.focusmode .mzone{margin-top:52px}
   body.focusmode .lastcard{max-width:min(620px,100%);padding:16px 28px;gap:6px;border-width:5px}
   body.focusmode .lc-main{gap:16px}
@@ -250,12 +256,14 @@
   body.focusmode .lc-nm.long{font-size:clamp(30px,4.8vw,54px);letter-spacing:1px}
   body.focusmode .lc-team{font-size:clamp(15px,2.2vw,20px);padding:6px 16px}
   body.focusmode .pool{font-size:15px;margin-top:16px}
-  body.focusmode #bar{display:flex}
 </style>
 </head>
 <body>
 
-<button id="modeBtn">📺 上課模式</button>
+<div class="topctl">
+  <button class="tbtn" id="autoTop">⚡ 全抽</button>
+  <button class="tbtn" id="modeBtn">📺 上課模式</button>
+</div>
 
 <h1>🐾 動物扭蛋分組機 🐾</h1>
 <p class="sub">轉一下把手，看看今天誰跟誰同一隊！</p>
@@ -368,7 +376,6 @@
         </div>
         <div class="lc-meta"><span class="lc-no"></span><span class="lc-team"></span></div>
       </div>
-      <button class="btn" id="go">🥚 轉一下！</button>
       <div class="pool" id="pool"></div>
       <div class="hist" id="hist"></div>
     </div>
@@ -404,10 +411,7 @@
   </div>
 </div>
 
-<div id="bar">
-  <button class="btn" id="goBar">🥚 轉一下！</button>
-  <button class="btn ghost" id="autoBar">⚡ 全抽</button>
-</div>
+
 
 <script>
 /* ===================== 名單 ===================== */
@@ -839,7 +843,7 @@ function autoAll(){
 }
 function setAutoLabel(running){
   $('auto').textContent=running?'⏸ 停下來':'⚡ 一次抽完';
-  $('autoBar').textContent=running?'⏸ 停':'⚡ 全抽';
+  $('autoTop').textContent=running?'⏸ 停':'⚡ 全抽';
 }
 
 /* ===================== 提示 ===================== */
@@ -1002,7 +1006,7 @@ function fitMachine(){
   const hintH=(hint&&hint.offsetParent)?hint.offsetHeight+10:0;
   const rcol=$('rcol');
   const rcolH=(rcol&&rcol.offsetParent)?rcol.offsetHeight+16:0;
-  const pad=row?(focus?112:125):(focus?104:95);   /* 卡片內距、外距與呼吸空間 */
+  const pad=row?(focus?80:125):(focus?92:95);   /* 卡片內距、外距與呼吸空間 */
   const availH=row
     ? Math.max(220, window.innerHeight-hintH-pad)
     : Math.max(180, window.innerHeight-hintH-rcolH-pad);
@@ -1022,8 +1026,7 @@ function fitMachine(){
 }
 window.addEventListener('resize',fitMachine);
 
-$('go').onclick=drawOne;  $('goBar').onclick=drawOne;
-$('auto').onclick=autoAll; $('autoBar').onclick=autoAll;
+$('auto').onclick=autoAll; $('autoTop').onclick=autoAll;
 $('reset').onclick=()=>{ if(autoTimer){clearTimeout(autoTimer);autoTimer=null;setAutoLabel(false);} busy=false; newRound(); };
 $('rename').onclick=()=>{
   if(plan.single){ setHint('單抽模式沒有分組，切到「👥 分組」才有隊名喔！',true); return; }
@@ -1071,6 +1074,7 @@ $('dlTxt').onclick=downloadTXT;
 /* 上課模式（投影 / iPad 展示） */
 $('modeBtn').onclick=()=>{
   const on=document.body.classList.toggle('focusmode');
+  document.documentElement.classList.toggle('focusmode',on);
   $('modeBtn').textContent=on?'✖️ 離開上課模式':'📺 上課模式';
   if(on){ const el=document.documentElement; if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }
   else if(document.fullscreenElement&&document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
